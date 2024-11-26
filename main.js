@@ -21,6 +21,7 @@ const playerImage = new Image();
 const chest1Image = new Image();
 const chest2Image = new Image();
 const treeSSImage = new Image();
+const cactusSSImage = new Image();
 const zombieImage = new Image();
 const skeletonImage = new Image();
 const wolfImage = new Image();
@@ -29,6 +30,7 @@ playerImage.src = 'assets/player.png';
 chest1Image.src = 'assets/chest1.png';
 chest2Image.src = 'assets/chest2.png';
 treeSSImage.src = 'assets/tree_ss.png';
+cactusSSImage.src = 'assets/cactus_ss.png';
 zombieImage.src = 'assets/zombie.png';
 skeletonImage.src = 'assets/skeleton.png';
 wolfImage.src = 'assets/wolf.png';
@@ -70,7 +72,6 @@ class Player {
         this.xpMax = xpMax
         this.xp = xp
         this.addToConsole = addToConsole
-        addToConsole(`-----------------------------------------------------`)
         addToConsole(`Création du personnage:`)
         addToConsole(`Name: ${name}`)
         addToConsole(`Level: ${level}`)
@@ -83,6 +84,11 @@ class Player {
     }
 
     draw(ctx, blockSize) {
+        let bgColor = '';
+        if (biomeType === 'herb') {bgColor = colors['h']}
+        else if (biomeType === 'dust') {bgColor = colors['d']}
+        ctx.fillStyle = bgColor
+        ctx.fillRect(this.xPos * blockSize, this.yPos * blockSize, blockSize, blockSize);
         ctx.drawImage(playerImage, this.xPos * blockSize, this.yPos * blockSize, blockSize, blockSize);
         
     }
@@ -90,12 +96,15 @@ class Player {
 
 function mapGeneration({
     width=32, height=32, 
-    biomeType='herb', riverType='water',
+    biomeType='rand', riverType='water',
     trees0Count=0, trees1Count=0, trees2Count=0, trees3Count=0, 
     chest1Count=0, chest2Count=0,
     zombieCount=0, skeletonCount=0, wolfCount=0
 }) {
     let map = []
+    if (biomeType === 'rand') {
+        biomeType = (Math.random() < 0.5 ? 'herb' : 'dust')
+    }
     if (biomeType === 'herb') {
         for (let y = 0; y < height; y++) {
             map[y] = []
@@ -104,14 +113,13 @@ function mapGeneration({
             }
         }
     }
-    else {
+    else if (biomeType === 'dust') {
         for (let y = 0; y < height; y++) {
             map[y] = []
             for (let x = 0; x < width; x++) {
                 map[y][x] = Math.random() < 0.34 ? "d" : "D"
             }
         }
-
     }
 
     for (let i = 0; i < trees0Count; i++) {
@@ -223,13 +231,17 @@ function mapGeneration({
 
 
     map[0][0] = "p"
+    addToConsole(`Map generation:`)
+    addToConsole(`Type:${biomeType} River: ${riverType}`)
+    addToConsole(`Trees: ${trees0Count + trees1Count + trees2Count + trees3Count} Chest: ${chest1Count + chest2Count} Monsters: ${zombieCount + skeletonCount + wolfCount}`)
+    addToConsole(`-----------------------------------------------------`)
     return {map, biomeType}
 }
-
+addToConsole(`-----------------------------------------------------`)
 const { map, biomeType } = mapGeneration({
     width: 16, height: 16, 
-    biomeType: 'herb', // herb, dust
-    riverType: '', // water, lava, ''
+    biomeType: 'rand', // herb, dust
+    riverType: 'no', // water, lava, ''
     trees0Count: 8, trees1Count: 24, trees2Count: 12, trees3Count: 8,  // 0: stump 1,2,3: trees type
     chest1Count: 4, chest2Count: 12, // 1: big chest 2: small chest
     zombieCount: 4, skeletonCount: 4, wolfCount: 4
@@ -264,13 +276,22 @@ function drawMap() {
                 }
                 ctx.fillStyle = bgColor
                 ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
-                ctx.drawImage(
-                    treeSSImage, 
-                    xvalue * 16, 0 * 16, // Coordonnées du deuxième arbre dans la sprite sheet
-                    16, 16,         // Taille du sprite (arbre)
-                    col * blockSize, row * blockSize,  // Position sur le canevas
-                    blockSize, blockSize          // Taille sur le canevas
-                );
+                if (biomeType === 'herb') {
+                    ctx.drawImage(
+                        treeSSImage, 
+                        xvalue * 16, 0 * 16, // Coordonnées du deuxième arbre dans la sprite sheet
+                        16, 16,         // Taille du sprite (arbre)
+                        col * blockSize, row * blockSize,  // Position sur le canevas
+                        blockSize, blockSize          // Taille sur le canevas
+                )}
+                else if (biomeType === 'dust') {
+                    ctx.drawImage(
+                        cactusSSImage, 
+                        xvalue * 16, 0 * 16, // Coordonnées du deuxième arbre dans la sprite sheet
+                        16, 16,         // Taille du sprite (arbre)
+                        col * blockSize, row * blockSize,  // Position sur le canevas
+                        blockSize, blockSize          // Taille sur le canevas
+                )}
             }
             else if (tile === "$") {
                 ctx.fillStyle = bgColor
@@ -307,7 +328,7 @@ function drawMap() {
 }
 
 let imagesLoaded = 0;
-const totalImages = 7; // Nombre d'images à charger
+const totalImages = 8; // Nombre d'images à charger
 
 function checkImagesLoaded() {
     imagesLoaded++;
@@ -322,6 +343,7 @@ playerImage.onload = checkImagesLoaded;
 chest1Image.onload = checkImagesLoaded;
 chest2Image.onload = checkImagesLoaded;
 treeSSImage.onload = checkImagesLoaded;
+cactusSSImage.onload = checkImagesLoaded;
 zombieImage.onload = checkImagesLoaded;
 skeletonImage.onload = checkImagesLoaded;
 wolfImage.onload = checkImagesLoaded;
