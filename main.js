@@ -25,6 +25,7 @@ const cactusSSImage = new Image();
 const zombieImage = new Image();
 const skeletonImage = new Image();
 const wolfImage = new Image();
+const bridgeImage = new Image();
 
 playerImage.src = 'assets/player.png';
 chest1Image.src = 'assets/chest1.png';
@@ -34,6 +35,7 @@ cactusSSImage.src = 'assets/cactus_ss.png';
 zombieImage.src = 'assets/zombie.png';
 skeletonImage.src = 'assets/skeleton.png';
 wolfImage.src = 'assets/wolf.png';
+bridgeImage.src = 'assets/bridge.png';
 
 const blockSize = 32;
 
@@ -49,14 +51,15 @@ const colors = {
     "p": "#c2d757",  // Player
     "e": "red", // Enemy
     "b": "blueviolet", // Boss
-    "w": "skyblue", // Water
+    "w": "#4ebcb9", // Water
     "b": "sienna", // Bridge
     "$": "gold", // Chest1
     "€": "silver", // Chest2
-    "~": "darkorange", // Lava
-    "Z": "red",
-    "S": "red",
-    "W": "red"
+    "~": "orange", // Lava
+    "Z": "red", // Zombie
+    "S": "red", // Skeleton
+    "W": "red", // Wolf
+    "=": "peru" // Bridge
 };
 
 class Player {
@@ -119,6 +122,47 @@ function mapGeneration({
             for (let x = 0; x < width; x++) {
                 map[y][x] = Math.random() < 0.34 ? "d" : "D"
             }
+        }
+    }
+    
+    if (riverType !== 'no') {
+        const riverTile = riverType === 'water' ? "w" : "~";
+        const riverRowStart = Math.floor(height / 2); // Position initiale de la rivière
+        let currentRow = riverRowStart;
+    
+        // Variables pour définir deux ponts avec des chances aléatoires
+        const bridgeChance = 0.05; // 5% de chance de placer un pont
+        let bridgeX1 = Math.floor(Math.random() * width); // Première position du pont
+        let bridgeX2 = Math.floor(Math.random() * width); // Deuxième position du pont
+    
+        // Assurer que les deux ponts ne se superposent pas
+        while (bridgeX1 === bridgeX2) {
+            bridgeX2 = Math.floor(Math.random() * width); // Si les ponts se superposent, générer une nouvelle position pour le second
+        }
+    
+        for (let x = 0; x < width; x++) {
+            // Si on est à l'emplacement du premier pont, placer le pont (une seule case)
+            if (x === bridgeX1) {
+                map[currentRow][x] = "="; // Le pont est représenté par "="
+            } 
+            // Si on est à l'emplacement du deuxième pont, placer le pont (une seule case)
+            else if (x === bridgeX2) {
+                map[currentRow][x] = "="; // Le pont est représenté par "="
+            }
+            else {
+                map[currentRow][x] = riverTile; // La rivière est représentée par "~" ou "w"
+            }
+    
+            // Changer la direction de la rivière
+            const direction = Math.random();
+            if (direction < 0.4 && currentRow > 0) {
+                // Monter
+                currentRow--;
+            } else if (direction > 0.6 && currentRow < height - 1) {
+                // Descendre
+                currentRow++;
+            }
+            // Sinon, rester sur la même ligne
         }
     }
 
@@ -237,11 +281,13 @@ function mapGeneration({
     addToConsole(`-----------------------------------------------------`)
     return {map, biomeType}
 }
+
 addToConsole(`-----------------------------------------------------`)
+
 const { map, biomeType } = mapGeneration({
     width: 16, height: 16, 
     biomeType: 'rand', // herb, dust
-    riverType: 'no', // water, lava, ''
+    riverType: 'water', // water, lava, ''
     trees0Count: 8, trees1Count: 24, trees2Count: 12, trees3Count: 8,  // 0: stump 1,2,3: trees type
     chest1Count: 4, chest2Count: 12, // 1: big chest 2: small chest
     zombieCount: 4, skeletonCount: 4, wolfCount: 4
@@ -313,11 +359,18 @@ function drawMap() {
                 ctx.fillStyle = bgColor
                 ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
                 ctx.drawImage(wolfImage, col * blockSize, row * blockSize, blockSize, blockSize)}
-            // else if (tile === "p") {
-            //     ctx.fillStyle = bgColor
-            //     ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
-            //     ctx.drawImage(playerImage, col * blockSize, row * blockSize, blockSize, blockSize);
-            // }
+            else if (tile === "=") {
+                ctx.fillStyle = bgColor
+                ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
+                ctx.drawImage(bridgeImage, col * blockSize, row * blockSize, blockSize, blockSize)}
+            else if (tile === "~") {
+                ctx.fillStyle = `rgba(255, 165, 0, ${opacity})`;
+                ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
+            }
+            else if (tile === "w") {
+            ctx.fillStyle = `rgba(135, 206, 250, ${opacity})`;
+            ctx.fillRect(col * blockSize, row * blockSize, blockSize, blockSize);
+        }
             else {
                 // Dessiner les autres éléments comme des carrés colorés
                 ctx.fillStyle = colors[tile]
@@ -327,14 +380,39 @@ function drawMap() {
     }
 }
 
+let opacity = 0.83; // Opacité initiale
+let direction = 1; // Direction de l'animation (1 = augmenter, -1 = diminuer)
+const speed = 0.005; // Vitesse du changement d'opacité
+
+function animateOpacity() {
+    // Modifie l'opacité selon la direction
+    opacity += direction * speed;
+
+    // Inverse la direction lorsque l'opacité atteint ses limites (0 ou 1)
+    if (opacity >= 1 || opacity <= 0.83) {
+        direction *= -1;
+    }
+}
+
+
+
 let imagesLoaded = 0;
-const totalImages = 8; // Nombre d'images à charger
+const totalImages = 9; // Nombre d'images à charger
 
 function checkImagesLoaded() {
     imagesLoaded++;
     if (imagesLoaded === totalImages) {
-        drawMap(); // Une fois toutes les images chargées, on dessine la carte
-        player.draw(ctx, blockSize)
+        function gameLoop() {
+            // Mets à jour l'opacité de la lave
+            animateOpacity();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Redessine la carte
+            drawMap(); // Une fois toutes les images chargées, on dessine la carte
+            player.draw(ctx, blockSize)
+            // Demande une nouvelle frame pour l'animation
+            requestAnimationFrame(gameLoop);
+        }
+        gameLoop()
     }
 }
 
@@ -347,6 +425,8 @@ cactusSSImage.onload = checkImagesLoaded;
 zombieImage.onload = checkImagesLoaded;
 skeletonImage.onload = checkImagesLoaded;
 wolfImage.onload = checkImagesLoaded;
+bridgeImage.onload = checkImagesLoaded;
+
 
 
 
