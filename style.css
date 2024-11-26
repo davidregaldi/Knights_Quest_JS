@@ -1,0 +1,43 @@
+body {
+    background-color: rgb(48, 46, 46);
+    margin: 0px;
+}
+
+body main div.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+}
+
+h1.title {
+    color:gainsboro;
+}
+
+canvas.game {
+    width: 512px;
+    height: 512px;
+    padding: 0;
+    border: 1px solid black;
+
+}
+
+div.console {
+    width: 512px;
+    height: 256px;
+    background-color: rgba(0, 0, 0, 1);
+    border: 1px solid green;
+    color: green;
+    font-family: Consolas, "Courier New", monospace;
+    font-weight: bold;
+    overflow-y: auto; /* Permet de scroller si le texte dépasse */
+
+}
+
+div.console p {
+    margin: 0;
+}
+
