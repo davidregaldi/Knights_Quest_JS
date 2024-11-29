@@ -22,9 +22,18 @@ class Player {
     }
 
     move(newY, newX, map) {
-        this.y = newY;
-        this.x = newX;
-        map.entityLayer[this.y][this.x] = this.id;
+        // Vérifie les limites de la carte
+        if (newY >= 0 && newY < map.height && newX >= 0 && newX < map.width) {
+            // Efface l'ancienne position
+            map.entityLayer[this.y][this.x] = '';
+    
+            // Met à jour les coordonnées
+            this.y = newY;
+            this.x = newX;
+    
+            // Enregistre la nouvelle position
+            map.entityLayer[this.y][this.x] = this.id;
+        }
     }
 }
 

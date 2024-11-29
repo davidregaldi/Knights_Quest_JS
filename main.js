@@ -4,11 +4,17 @@ import Enemy from './classes/Enemy.js'
 
 const canvas = document.querySelector('.game');
 const ctx = canvas.getContext('2d');
-const tileSize = 24;
+const tileSize = 32;
 
 // collection d'entités: players, enemies
 const entities = {}
 const gameImages = {};
+
+let map
+let player1
+
+let direction = null;
+let keyPressed = false;
 
 export function addToConsole(message, color = 'green') {
     const consoleDiv = document.querySelector('.console');
@@ -44,13 +50,17 @@ async function loadAllImages() {
             loadImage('assets/boss.png'),
             loadImage('assets/chest1.png'),
             loadImage('assets/chest2.png'),
-            loadImage('assets/player.png'),
+            loadImage('assets/mummy.png'),
+            loadImage('assets/player.gif'),
             loadImage('assets/skeletonMage.png'),
             loadImage('assets/skeleton.png'),
             loadImage('assets/treeDustSS.png'),
             loadImage('assets/treeHerbSS.png'),
+            loadImage('assets/treeSnowSS.png'),
+            loadImage('assets/treeMagmaSS.png'),
             loadImage('assets/wolf.png'),
-            loadImage('assets/zombie.png')
+            loadImage('assets/zombie.png'),
+            loadImage('assets/zombieBig.png')
         ]);
 
         images.forEach(({ name, img }) => {
@@ -62,7 +72,7 @@ async function loadAllImages() {
     }
 }
 
-function generateMonsters({ bossCount = 0, skeletonCount = 0, skeletonMageCount = 0, wolfCount = 0, zombieCount = 0 }, map, entities) {
+function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, skeletonMageCount = 0, wolfCount = 0, zombieCount = 0, zombieBigCount = 0 }, map, entities) {
     let instanceCount = Object.keys(entities).length; // Compteur basé sur le nombre d'entités existantes
 
     const createMonster = (count, type) => {
@@ -87,40 +97,82 @@ function generateMonsters({ bossCount = 0, skeletonCount = 0, skeletonMageCount 
     };
 
     createMonster(bossCount, 'boss');
+    createMonster(mummyCount, 'mummy');
     createMonster(skeletonCount, 'skeleton');
     createMonster(skeletonMageCount, 'skeletonMage');
     createMonster(wolfCount, 'wolf');
     createMonster(zombieCount, 'zombie');
+    createMonster(zombieBigCount, 'zombieBig');
 }
 
-// affiche la map
+// Initialisation du jeu
 (async function initializeGame() {
     addToConsole("Knight's Quest JS", 'white')
 
+    // Attends le chargement des images
     await loadAllImages();
     window.gameImages = gameImages; // Stocker dans l'objet global
 
-    // Génération de la carte, du joueur, et des ennemis
-    const map = new Map({width: 24, height: 24, biome: 'random', name: 'The Forest'}, addToConsole);
+    // Génération de la carte
+    map = new Map({width: 16, height: 16, biome: 'random', name: 'The Forest'}, addToConsole);
 
-    // génération d'éléments sur la map
+    // Génération d'éléments
     map.generateStuff({
         stumpTreeCount: 8, smallTreeCount: 16, mediumTreeCount: 24, bigTreeCount: 8, 
         smallChestCount: 10, bigChestCount: 6,
     })
-
-    const player1 = new Player({id: 'player1', name: 'Eidknab', y: 0, x: 0, map, entities});
+    // Génération des monstres
     generateMonsters(
-        { bossCount: 1, skeletonCount: 10, skeletonMageCount: 6, wolfCount: 10, zombieCount: 8 },
+        { bossCount: 1, mummyCount: 4, skeletonCount: 10, skeletonMageCount: 6, wolfCount: 10, zombieCount: 8, zombieBigCount: 4 },
         map,
         entities
     )
-    // const enemy1 = new Enemy({id: 'zombie1', name: '', y: 'random', x: 'random', map, entities});
+    // Génération du joueur
+    player1 = new Player({id: 'player1', name: 'Eidknab', y: 0, x: 0, map, entities});
 
-    // Afficher la map
+    requestAnimationFrame((timestamp) => gameLoop(map, ctx, tileSize, timestamp));
+})();
+
+// Ecoute des touches pressées
+window.addEventListener('keydown', (event) => {
+    if (!keyPressed) {
+        if (event.key === 'ArrowUp') direction = 'up';
+        else if (event.key === 'ArrowDown') direction = 'down';
+        else if (event.key === 'ArrowLeft') direction = 'left';
+        else if (event.key === 'ArrowRight') direction = 'right';
+
+        keyPressed = true; // Empêche les déplacements répétés
+    }
+});
+
+// Ecoute des touches relachées
+window.addEventListener('keyup', () => {
+    direction = null; // Réinitialise la direction
+    keyPressed = false; // Permet un nouveau déplacement
+});
+
+function gameLoop() {
+    // Clean canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Afficher le terrain et les entités
     map.displayTerrain(ctx, tileSize);
     map.displayEntities(ctx, tileSize);
-})();
+
+    // Gérer le mouvement du joueur
+    if (direction) {
+        const { y, x } = player1;
+        if (direction === 'up') player1.move(y - 1, x, map);
+        else if (direction === 'down') player1.move(y + 1, x, map);
+        else if (direction === 'left') player1.move(y, x - 1, map);
+        else if (direction === 'right') player1.move(y, x + 1, map);
+
+        direction = null; // Empêche un autre mouvement tant que la touche n'est pas relâchée
+    }
+
+    // Recommencer la boucle
+    requestAnimationFrame(gameLoop);
+}
 
 
 

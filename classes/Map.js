@@ -61,25 +61,7 @@ class Map {
         placeStuff(smallChestCount, 'chest1'); placeStuff(bigChestCount, 'chest2');
     }
 
-    generateMonsters({skeletonCount = 0, skeletonMageCount = 0, wolfCount = 0, zombieCount = 0, entities}) {
-        monsters.forEach(({ id, name, y = 'random', x = 'random', type = 'zombie' }) => {
-            const newMonster = new Enemy({
-                id,
-                name,
-                y,
-                x,
-                map: this,
-                entities
-            });
-
-            // Ajoute un type personnalisé pour le monstre (par exemple : zombie, wolf, etc.)
-            entities[id].type = type;
-        });
-    }
-
     displayTerrain(ctx, tileSize) {
-        addToConsole(`Taille des blocs:${tileSize}px`, 'darkcyan')
-        addToConsole(`Affichage du calque sol...`, 'darkcyan')
         console.log(this.terrainLayer);
         let colors = {}
         if (this.biome ==='herb') {
@@ -121,18 +103,18 @@ class Map {
 
     displayEntities(ctx, tileSize) {
         console.log(this.entityLayer);
-        addToConsole(`Affichage du calque d'entités...`, 'darkcyan')
-    
         for (let row = 0; row < this.entityLayer.length; row++) {
             for (let col = 0; col < this.entityLayer[row].length; col++) {
                 const tile = this.entityLayer[row][col];
                 if (tile.includes('boss')) {ctx.drawImage(window.gameImages['boss'], col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile.includes('mummy')) {ctx.drawImage(window.gameImages['mummy'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('player')) {ctx.drawImage(window.gameImages['player'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 'chest1') {ctx.drawImage(window.gameImages['chest1'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 'chest2') {ctx.drawImage(window.gameImages['chest2'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('skeletonMage')) {ctx.drawImage(window.gameImages['skeletonMage'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('skeleton')) {ctx.drawImage(window.gameImages['skeleton'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('wolf')) {ctx.drawImage(window.gameImages['wolf'], col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile.includes('zombieBig')) {ctx.drawImage(window.gameImages['zombieBig'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('zombie')) {ctx.drawImage(window.gameImages['zombie'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 't0' && this.biome === 'herb') {ctx.drawImage(window.gameImages['treeHerbSS'], 0 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 't1' && this.biome === 'herb') { ctx.drawImage(window.gameImages['treeHerbSS'], 1 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
@@ -142,6 +124,14 @@ class Map {
                 else if (tile === 't1' && this.biome === 'dust') { ctx.drawImage(window.gameImages['treeDustSS'], 1 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 't2' && this.biome === 'dust') { ctx.drawImage(window.gameImages['treeDustSS'], 2 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 't3' && this.biome === 'dust') { ctx.drawImage(window.gameImages['treeDustSS'], 3 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't0' && this.biome === 'snow') {ctx.drawImage(window.gameImages['treeSnowSS'], 0 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't1' && this.biome === 'snow') { ctx.drawImage(window.gameImages['treeSnowSS'], 1 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't2' && this.biome === 'snow') { ctx.drawImage(window.gameImages['treeSnowSS'], 2 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't3' && this.biome === 'snow') { ctx.drawImage(window.gameImages['treeSnowSS'], 3 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't0' && this.biome === 'magma') {ctx.drawImage(window.gameImages['treeMagmaSS'], 0 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't1' && this.biome === 'magma') { ctx.drawImage(window.gameImages['treeMagmaSS'], 1 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't2' && this.biome === 'magma') { ctx.drawImage(window.gameImages['treeMagmaSS'], 2 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 't3' && this.biome === 'magma') { ctx.drawImage(window.gameImages['treeMagmaSS'], 3 * 16, 0 * 16, 16, 16, col * tileSize, row * tileSize, tileSize, tileSize);}
                 }
             }
         }
