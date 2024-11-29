@@ -51,7 +51,7 @@ async function loadAllImages() {
             loadImage('assets/chest1.png'),
             loadImage('assets/chest2.png'),
             loadImage('assets/mummy.png'),
-            loadImage('assets/player.gif'),
+            loadImage('assets/player.png'),
             loadImage('assets/skeletonMage.png'),
             loadImage('assets/skeleton.png'),
             loadImage('assets/treeDustSS.png'),
