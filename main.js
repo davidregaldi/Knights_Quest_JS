@@ -1,17 +1,17 @@
 import Map from './classes/Map.js';
-import Player from './classes/Player.js'
-import Enemy from './classes/Enemy.js'
+import Player from './classes/Player.js';
+import Enemy from './classes/Enemy.js';
 
 const canvas = document.querySelector('.game');
 const ctx = canvas.getContext('2d');
 const tileSize = 32;
 
-// collection d'entités: players, enemies
-const entities = {}
+// Collection d'entités: players, enemies
+const entities = {};
 const gameImages = {};
 
-let map
-let player1
+let map;
+let player1;
 
 let direction = null;
 let keyPressed = false;
@@ -21,17 +21,15 @@ export function addToConsole(message, color = 'green') {
     const newLine = document.createElement('p');
     
     newLine.textContent = message;
-    newLine.style.color = color; // Définir la couleur du texte
+    newLine.style.color = color;
 
     consoleDiv.appendChild(newLine);
-
-    // Scrolling automatique
     consoleDiv.scrollTop = consoleDiv.scrollHeight;
 }
 
 export function clearConsole() {
     const consoleDiv = document.querySelector('.console');
-    consoleDiv.innerHTML = ''; // Supprime tout le contenu HTML
+    consoleDiv.innerHTML = '';
 }
 
 function loadImage(src) {
@@ -44,7 +42,7 @@ function loadImage(src) {
 }
 
 async function loadAllImages() {
-    addToConsole("Chargement des images...", 'gold')
+    addToConsole("Chargement des images...", 'gold');
     try {
         const images = await Promise.all([
             loadImage('assets/boss.png'),
@@ -65,7 +63,7 @@ async function loadAllImages() {
 
         images.forEach(({ name, img }) => {
             gameImages[name] = img;
-        addToConsole(`assets/${name}.png`, 'gold')
+            addToConsole(`assets/${name}.png`, 'gold');
         });
     } catch (error) {
         console.error(error);
@@ -105,35 +103,67 @@ function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, sk
     createMonster(zombieBigCount, 'zombieBig');
 }
 
-// Initialisation du jeu
-(async function initializeGame() {
-    addToConsole("Knight's Quest JS", 'white')
-
-    // Attends le chargement des images
+export async function initializeGame() {
+    clearConsole();
+    addToConsole("Knight's Quest JS", 'white');
     await loadAllImages();
-    window.gameImages = gameImages; // Stocker dans l'objet global
+    window.gameImages = gameImages;
 
-    // Génération de la carte
-    map = new Map({width: 16, height: 16, biome: 'random', name: 'The Forest'}, addToConsole);
+    map = new Map({ width: 16, height: 16, biome: 'random', name: 'The Forest' });
 
-    // Génération d'éléments
     map.generateStuff({
         stumpTreeCount: 8, smallTreeCount: 16, mediumTreeCount: 24, bigTreeCount: 8, 
-        smallChestCount: 10, bigChestCount: 6,
-    })
-    // Génération des monstres
+        smallChestCount: 10, bigChestCount: 6, trappedChestCount: 4,
+    });
+
     generateMonsters(
         { bossCount: 1, mummyCount: 4, skeletonCount: 10, skeletonMageCount: 6, wolfCount: 10, zombieCount: 8, zombieBigCount: 4 },
         map,
         entities
-    )
-    // Génération du joueur
-    player1 = new Player({id: 'player1', name: 'Eidknab', y: 0, x: 0, map, entities});
+    );
 
-    requestAnimationFrame((timestamp) => gameLoop(map, ctx, tileSize, timestamp));
-})();
+    player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, map, entities });
 
-// Ecoute des touches pressées
+    requestAnimationFrame(gameLoop);
+}
+
+export function gameOver() {
+    addToConsole('GAME OVER - new game in 10...', 'white')
+    setTimeout(() => {restartGame()}, 10000);
+}
+
+function restartGame() {
+    initializeGame();
+}
+
+export function fightScreen(player, enemy) {
+    addToConsole(`Fight between ${player.name} and ${enemy.id}`)
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    map.displayTerrain(ctx, tileSize);
+    map.displayEntities(ctx, tileSize);
+
+    if (direction) {
+        const { y, x } = player1;
+        if (direction === 'up') player1.move(y - 1, x, map, entities);
+        else if (direction === 'down') player1.move(y + 1, x, map, entities);
+        else if (direction === 'left') player1.move(y, x - 1, map, entities);
+        else if (direction === 'right') player1.move(y, x + 1, map, entities);
+
+        direction = null;
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+// Appel initial une fois que le DOM est chargé
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGame(); // Appeler le jeu après que le DOM soit prêt
+});
+
+// Gestion des événements pour les déplacements
 window.addEventListener('keydown', (event) => {
     if (!keyPressed) {
         if (event.key === 'ArrowUp') direction = 'up';
@@ -141,38 +171,11 @@ window.addEventListener('keydown', (event) => {
         else if (event.key === 'ArrowLeft') direction = 'left';
         else if (event.key === 'ArrowRight') direction = 'right';
 
-        keyPressed = true; // Empêche les déplacements répétés
+        keyPressed = true;
     }
 });
 
-// Ecoute des touches relachées
 window.addEventListener('keyup', () => {
-    direction = null; // Réinitialise la direction
-    keyPressed = false; // Permet un nouveau déplacement
+    direction = null;
+    keyPressed = false;
 });
-
-function gameLoop() {
-    // Clean canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Afficher le terrain et les entités
-    map.displayTerrain(ctx, tileSize);
-    map.displayEntities(ctx, tileSize);
-
-    // Gérer le mouvement du joueur
-    if (direction) {
-        const { y, x } = player1;
-        if (direction === 'up') player1.move(y - 1, x, map);
-        else if (direction === 'down') player1.move(y + 1, x, map);
-        else if (direction === 'left') player1.move(y, x - 1, map);
-        else if (direction === 'right') player1.move(y, x + 1, map);
-
-        direction = null; // Empêche un autre mouvement tant que la touche n'est pas relâchée
-    }
-
-    // Recommencer la boucle
-    requestAnimationFrame(gameLoop);
-}
-
-
-

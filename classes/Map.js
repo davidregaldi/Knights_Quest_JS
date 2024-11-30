@@ -44,9 +44,9 @@ class Map {
 
     generateStuff({
         stumpTreeCount = 0, smallTreeCount = 0, mediumTreeCount = 0, bigTreeCount = 0,  // Trees
-        smallChestCount = 0, bigChestCount = 0,                                         // Chests
+        smallChestCount = 0, bigChestCount = 0, trappedChestCount = 0,                                        // Chests
     }) {
-        addToConsole(`Ajout du décor: ${stumpTreeCount + smallTreeCount + mediumTreeCount + bigTreeCount} arbres ${smallChestCount + bigChestCount} coffres`)
+        addToConsole(`Ajout du décor: ${stumpTreeCount + smallTreeCount + mediumTreeCount + bigTreeCount} arbres ${smallChestCount + bigChestCount + trappedChestCount} coffres`)
         const placeStuff = (stuffCount, stuffType) => {
             while (stuffCount > 0) {
                 let x = Math.floor(Math.random() * this.width);
@@ -58,11 +58,11 @@ class Map {
             }
         }
         placeStuff(stumpTreeCount, 't0'); placeStuff(smallTreeCount, 't1'); placeStuff(mediumTreeCount, 't2');placeStuff(bigTreeCount, 't3');
-        placeStuff(smallChestCount, 'chest1'); placeStuff(bigChestCount, 'chest2');
+        placeStuff(smallChestCount, 'chest1'); placeStuff(bigChestCount, 'chest2'); placeStuff(trappedChestCount, 'chest3');
     }
 
     displayTerrain(ctx, tileSize) {
-        console.log(this.terrainLayer);
+        // console.log(this.terrainLayer);
         let colors = {}
         if (this.biome ==='herb') {
             colors = {
@@ -102,14 +102,14 @@ class Map {
     }
 
     displayEntities(ctx, tileSize) {
-        console.log(this.entityLayer);
+        // console.log(this.entityLayer);
         for (let row = 0; row < this.entityLayer.length; row++) {
             for (let col = 0; col < this.entityLayer[row].length; col++) {
                 const tile = this.entityLayer[row][col];
                 if (tile.includes('boss')) {ctx.drawImage(window.gameImages['boss'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('mummy')) {ctx.drawImage(window.gameImages['mummy'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('player')) {ctx.drawImage(window.gameImages['player'], col * tileSize, row * tileSize, tileSize, tileSize);}
-                else if (tile === 'chest1') {ctx.drawImage(window.gameImages['chest1'], col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 'chest1' || tile === 'chest3') {ctx.drawImage(window.gameImages['chest1'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 'chest2') {ctx.drawImage(window.gameImages['chest2'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('skeletonMage')) {ctx.drawImage(window.gameImages['skeletonMage'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('skeleton')) {ctx.drawImage(window.gameImages['skeleton'], col * tileSize, row * tileSize, tileSize, tileSize);}
