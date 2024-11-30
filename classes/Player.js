@@ -3,15 +3,19 @@ import { gameOver } from '../main.js';
 import { fightScreen } from '../main.js';
 
 class Player {
-    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', hpMax = 1, hp = 1, gold = 20, map, entities}) {
+    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, xpMax = 250, xp = 0, hpMax = 100, hp = 100, gold = 20, map, entities}) {
         this.id = id
         this.name = name
         this.y = y
         this.x = x
         this.consColor = consColor
+        this.level = level
+        this.xpMax = 250 * level
+        this.xp = xp
         this.hpMax = hpMax
         this.hp = hp
         this.gold = gold
+
         if (this.y === 'random' && this.x === 'random') {
             do {
                 this.y = Math.floor(Math.random() * map.height)
@@ -85,8 +89,6 @@ class Player {
         }
     }
     
-    
-
     foundChest(chestType) {
         let gold
         if (chestType === 'smallChest') {
@@ -106,7 +108,7 @@ class Player {
             this.hp = (this.hp - damage)
             addToConsole(`${this.name} take ${damage}dmg`, 'orange')
             console.log(this.hp)
-            if (this.isDead() === false) { addToConsole('pas mort') }
+            if (this.isDead() === false) { addToConsole(`${this.hp}hp left.`) }
             else {        
                 addToConsole(`${this.name} is dead...`)
                 gameOver()
@@ -116,6 +118,10 @@ class Player {
 
     randomizeValue(randomValue) {
         return Math.floor(Math.random() * randomValue) + 1;
+    }
+
+    randomizeMinMax(minValue, maxValue) {
+        return Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue
     }
 }
 

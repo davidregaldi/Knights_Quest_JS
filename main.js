@@ -1,48 +1,48 @@
-import Map from './classes/Map.js';
-import Player from './classes/Player.js';
-import Enemy from './classes/Enemy.js';
+import Map from './classes/Map.js'
+import Player from './classes/Player.js'
+import Enemy from './classes/Enemy.js'
 
-const canvas = document.querySelector('.game');
-const ctx = canvas.getContext('2d');
-const tileSize = 32;
+const canvas = document.querySelector('.game')
+const ctx = canvas.getContext('2d')
+const tileSize = 32
 
 // Collection d'entités: players, enemies
-const entities = {};
-const gameImages = {};
+const entities = {}
+const gameImages = {}
 
-let map;
-let player1;
+let map
+let player1
 
-let direction = null;
-let keyPressed = false;
+let direction = null
+let keyPressed = false
 
 export function addToConsole(message, color = 'green') {
-    const consoleDiv = document.querySelector('.console');
-    const newLine = document.createElement('p');
+    const consoleDiv = document.querySelector('.console')
+    const newLine = document.createElement('p')
     
-    newLine.textContent = message;
-    newLine.style.color = color;
+    newLine.textContent = message
+    newLine.style.color = color
 
-    consoleDiv.appendChild(newLine);
-    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    consoleDiv.appendChild(newLine)
+    consoleDiv.scrollTop = consoleDiv.scrollHeight
 }
 
 export function clearConsole() {
-    const consoleDiv = document.querySelector('.console');
-    consoleDiv.innerHTML = '';
+    const consoleDiv = document.querySelector('.console')
+    consoleDiv.innerHTML = ''
 }
 
 function loadImage(src) {
     return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => resolve({ name: src.split('/').pop().split('.')[0], img });
-        img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+        const img = new Image()
+        img.src = src
+        img.onload = () => resolve({ name: src.split('/').pop().split('.')[0], img })
+        img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
     });
 }
 
 async function loadAllImages() {
-    addToConsole("Chargement des images...", 'gold');
+    addToConsole("Chargement des images...", 'gold')
     try {
         const images = await Promise.all([
             loadImage('assets/boss.png'),
@@ -62,11 +62,11 @@ async function loadAllImages() {
         ]);
 
         images.forEach(({ name, img }) => {
-            gameImages[name] = img;
-            addToConsole(`assets/${name}.png`, 'gold');
+            gameImages[name] = img
+            addToConsole(`assets/${name}.png`, 'gold')
         });
     } catch (error) {
-        console.error(error);
+        console.error(error)
     }
 }
 
@@ -85,6 +85,7 @@ function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, sk
                 name: '',
                 y: 'random',
                 x: 'random',
+                level: '',
                 map,
                 entities,
             });
@@ -103,7 +104,7 @@ function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, sk
     createMonster(zombieBigCount, 'zombieBig');
 }
 
-export async function initializeGame() {
+async function initializeGame() {
     clearConsole();
     addToConsole("Knight's Quest JS", 'white');
     await loadAllImages();
@@ -122,7 +123,7 @@ export async function initializeGame() {
         entities
     );
 
-    player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, map, entities });
+    player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, level: 1, map, entities });
 
     requestAnimationFrame(gameLoop);
 }
@@ -137,7 +138,10 @@ function restartGame() {
 }
 
 export function fightScreen(player, enemy) {
-    addToConsole(`Fight between ${player.name} and ${enemy.id}`)
+    addToConsole(`Fight started between:`)
+    addToConsole(`${player.name} level:${player.level} hp:${player.hp}/${player.hpMax} xp:${player.xp}/${player.xpMax}`)
+    addToConsole(`${enemy.id} ${enemy.name} level:${enemy.level} hp:${enemy.hp}/${enemy.hpMax} xp:${enemy.xp}/${enemy.xpMax}`)
+
 }
 
 function gameLoop() {
