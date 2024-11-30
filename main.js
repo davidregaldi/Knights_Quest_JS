@@ -139,8 +139,8 @@ function restartGame() {
 
 export function fightScreen(player, enemy) {
     addToConsole(`Fight started between:`)
-    addToConsole(`${player.name} level:${player.level} hp:${player.hp}/${player.hpMax} xp:${player.xp}/${player.xpMax}`)
-    addToConsole(`${enemy.id} ${enemy.name} level:${enemy.level} hp:${enemy.hp}/${enemy.hpMax} xp:${enemy.xp}/${enemy.xpMax}`)
+    addToConsole(`${player.name} level:${player.level} xp:${player.xp}/${player.xpMax} hp:${player.hp}/${player.hpMax} gp:${player.gold}`)
+    addToConsole(`${enemy.id} ${enemy.name} level:${enemy.level} xp:${enemy.xp}/${enemy.xpMax} hp:${enemy.hp}/${enemy.hpMax} gp:${enemy.gold}`)
 
 }
 

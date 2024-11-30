@@ -41,65 +41,93 @@ class Player {
     move(newY, newX, map, entities) {
         if (!this.isDead()) {
             if (newY >= 0 && newY < map.height && newX >= 0 && newX < map.width) {
-                // Vérifier les collisions spécifiques et actions sur la nouvelle position
-                const entityId = map.entityLayer[newY][newX];
+                // Vérifier si le joueur rencontre t0 pour tenter de sauter par-dessus
+                let entityId = map.entityLayer[newY][newX]
+    
+                if (entityId === 't0') {
+                    // Tenter de sauter par-dessus la case t0
+                    const jumpY = newY + (newY - this.y)
+                    const jumpX = newX + (newX - this.x)
+    
+                    if (jumpY >= 0 && jumpY < map.height && jumpX >= 0 && jumpX < map.width) {
+                        // Mise à jour de newY et newX pour continuer avec la position après le saut
+                        newY = jumpY
+                        newX = jumpX
+                    } 
+                    else {
+                        // Hors des limites après le saut
+                        addToConsole('Cannot jump outside the map boundaries')
+                        return;
+                    }
+                }
+    
+                // Vérifier les collisions spécifiques et actions sur la nouvelle position (après le saut potentiel)
+                entityId = map.entityLayer[newY][newX]
     
                 if (entityId === 'chest1') {
-                    this.foundChest('smallChest');
-                } else if (entityId === 'chest2') {
-                    this.foundChest('bigChest');
-                } else if (entityId === 'chest3') {
-                    this.foundChest('trappedChest');
-                } else if (
-                    entityId === 't0' ||
+                    this.foundChest('smallChest')
+                } 
+                else if (entityId === 'chest2') {
+                    this.foundChest('bigChest')
+                } 
+                else if (entityId === 'chest3') {
+                    this.foundChest('trappedChest')
+                } 
+                else if (
                     entityId === 't1' ||
                     entityId === 't2' ||
                     entityId === 't3'
                 ) {
-                    addToConsole('Tree collision');
+                    addToConsole('Tree collision')
                     return;
-                } else if (entityId !== '') {    
+                } 
+                else if (entityId !== '') {    
                     // Vérifier si une entité ennemie se trouve sur la position cible
                     if (entityId in entities) {
-                        const enemy = entities[entityId]; // Accéder directement à l'instance de l'ennemi
+                        const enemy = entities[entityId] // Accéder directement à l'instance de l'ennemi
     
                         // Vérification supplémentaire pour s'assurer que l'ennemi est valide
                         if (enemy) {
-                            fightScreen(this, enemy); // Lancer le combat
+                            fightScreen(this, enemy) // Lancer le combat
                             return; // Arrêter le mouvement après avoir commencé le combat
-                        } else {
-                            console.error(`Enemy not found for ID: ${entityId}`);
+                        } 
+                        else {
+                            console.error(`Enemy not found for ID: ${entityId}`)
                         }
-                    } else {
-                        console.error(`Entity ID ${entityId} not found in entities`);
+                    } 
+                    else {
+                        console.error(`Entity ID ${entityId} not found in entities`)
                     }
                     return;
                 }
     
                 // Efface l'ancienne position
-                map.entityLayer[this.y][this.x] = '';
+                map.entityLayer[this.y][this.x] = ''
     
                 // Met à jour les coordonnées
-                this.y = newY;
-                this.x = newX;
+                this.y = newY
+                this.x = newX
     
                 // Enregistre la nouvelle position
-                map.entityLayer[this.y][this.x] = this.id;
+                map.entityLayer[this.y][this.x] = this.id
             }
         }
     }
+    
     
     foundChest(chestType) {
         let gold
         if (chestType === 'smallChest') {
             gold = this.randomizeValue(20)
-            self.gold = self.gold + gold
-            addToConsole(`${this.name} found a chest! ${gold}gp`)
+            this.gold = this.gold + gold
+            addToConsole(`${this.name} found a chest! ${gold}gp`, 'gold')
+            addToConsole(`ìnventory gp: ${this.gold}`)
         }
         else if (chestType === 'bigChest') {
             gold = this.randomizeValue(50)
-            self.gold = self.gold + gold
-            addToConsole(`${this.name} found a big chest! ${gold}gp`)
+            this.gold = this.gold + gold
+            addToConsole(`${this.name} found a big chest! ${gold}gp`, 'gold')
+            addToConsole(`ìnventory gp: ${this.gold}`)
         }
         else if (chestType === 'trappedChest') {
             addToConsole(`${this.name} triggered a trap !`, 'brown')
