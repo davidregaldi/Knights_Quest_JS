@@ -8,6 +8,7 @@ const tileSize = 32
 
 // Collection d'entités: players, enemies
 const entities = {}
+const gameSounds = {}
 const gameImages = {}
 
 let map
@@ -70,6 +71,39 @@ async function loadAllImages() {
     }
 }
 
+async function loadAllSounds() {
+    try {
+        const soundFiles = [
+            'assets/sounds/chest.wav',
+            'assets/sounds/move.wav',
+            'assets/sounds/musicHerb.wav',
+            'assets/sounds/jump.wav',
+            'assets/sounds/trap.wav',
+            'assets/sounds/wall.wav',
+
+        ];
+
+        const soundPromises = soundFiles.map(filePath => {
+            return new Promise((resolve, reject) => {
+                const audio = new Audio(filePath);
+                audio.onloadeddata = () => resolve({ name: filePath.split('/').pop().split('.')[0], audio });
+                audio.onerror = () => reject(new Error(`Failed to load sound: ${filePath}`));
+            });
+        });
+
+        const loadedSounds = await Promise.all(soundPromises);
+        loadedSounds.forEach(({ name, audio }) => {
+            gameSounds[name] = audio;
+            addToConsole(`assets/${name}.wav`, 'pink')
+
+        });
+        addToConsole("Sounds loaded successfully", 'pink');
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+
 function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, skeletonMageCount = 0, wolfCount = 0, zombieCount = 0, zombieBigCount = 0 }, map, entities) {
     let instanceCount = Object.keys(entities).length; // Compteur basé sur le nombre d'entités existantes
 
@@ -107,6 +141,7 @@ function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, sk
 async function initializeGame() {
     clearConsole();
     addToConsole("Knight's Quest JS", 'white');
+    await loadAllSounds();
     await loadAllImages();
     window.gameImages = gameImages;
 
@@ -151,10 +186,10 @@ function gameLoop() {
 
     if (direction) {
         const { y, x } = player1;
-        if (direction === 'up') player1.move(y - 1, x, map, entities);
-        else if (direction === 'down') player1.move(y + 1, x, map, entities);
-        else if (direction === 'left') player1.move(y, x - 1, map, entities);
-        else if (direction === 'right') player1.move(y, x + 1, map, entities);
+        if (direction === 'up') player1.move(y - 1, x, map, entities, gameSounds);
+        else if (direction === 'down') player1.move(y + 1, x, map, entities, gameSounds);
+        else if (direction === 'left') player1.move(y, x - 1, map, entities, gameSounds);
+        else if (direction === 'right') player1.move(y, x + 1, map, entities, gameSounds);
 
         direction = null;
     }
@@ -176,6 +211,9 @@ window.addEventListener('keydown', (event) => {
         else if (event.key === 'ArrowRight') direction = 'right';
 
         keyPressed = true;
+        gameSounds['musicHerb'].volume = 0.15;
+        gameSounds['musicHerb'].loop = true;
+        gameSounds['musicHerb'].play();
     }
 });
 
@@ -183,3 +221,7 @@ window.addEventListener('keyup', () => {
     direction = null;
     keyPressed = false;
 });
+
+//gestion des sons de déplacement et musique
+//fight screen
+//inventory screen

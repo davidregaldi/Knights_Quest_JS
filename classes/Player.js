@@ -38,7 +38,7 @@ class Player {
         }
     }
 
-    move(newY, newX, map, entities) {
+    move(newY, newX, map, entities, gameSounds) {
         if (!this.isDead()) {
             if (newY >= 0 && newY < map.height && newX >= 0 && newX < map.width) {
                 // Vérifier si le joueur rencontre t0 pour tenter de sauter par-dessus
@@ -53,6 +53,8 @@ class Player {
                         // Mise à jour de newY et newX pour continuer avec la position après le saut
                         newY = jumpY
                         newX = jumpX
+                        gameSounds['jump'].volume = 0.2;
+                        gameSounds['jump'].play()
                     } 
                     else {
                         // Hors des limites après le saut
@@ -66,11 +68,17 @@ class Player {
     
                 if (entityId === 'chest1') {
                     this.foundChest('smallChest')
+                    gameSounds['chest'].volume = 0.2;
+                    gameSounds['chest'].play()
                 } 
                 else if (entityId === 'chest2') {
                     this.foundChest('bigChest')
+                    gameSounds['chest'].volume = 0.2;
+                    gameSounds['chest'].play()
                 } 
                 else if (entityId === 'chest3') {
+                    gameSounds['trap'].volume = 0.2;
+                    gameSounds['trap'].play()
                     this.foundChest('trappedChest')
                 } 
                 else if (
@@ -78,6 +86,8 @@ class Player {
                     entityId === 't2' ||
                     entityId === 't3'
                 ) {
+                    gameSounds['wall'].volume = 0.2;
+                    gameSounds['wall'].play()
                     addToConsole('Tree collision')
                     return;
                 } 
@@ -110,6 +120,8 @@ class Player {
     
                 // Enregistre la nouvelle position
                 map.entityLayer[this.y][this.x] = this.id
+                gameSounds['move'].volume = 0.1;
+                gameSounds['move'].play()
             }
         }
     }
@@ -135,7 +147,6 @@ class Player {
             const damage = this.randomizeValue(25)
             this.hp = (this.hp - damage)
             addToConsole(`${this.name} take ${damage}dmg`, 'orange')
-            console.log(this.hp)
             if (this.isDead() === false) { addToConsole(`${this.hp}hp left.`) }
             else {        
                 addToConsole(`${this.name} is dead...`)
