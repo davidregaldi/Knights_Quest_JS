@@ -14,6 +14,8 @@ class Enemy extends Player {
         this.xpMax = Math.floor(250 * this.level)
         this.xp = Math.floor(this.randomizeValue(this.xpMax) / 5)
         this.gold = Math.floor(this.randomizeValue(gold) * this.level)
+        this.hpMax = this.hpMax + Math.floor((this.hpMax*(this.level-1)*0.20))
+        this.hp = this.hpMax
     };
 
 }

@@ -30,7 +30,7 @@ class Player {
     }
 
     isDead() {
-        if (this.hp >= 0) {
+        if (this.hp > 0) {
             return false
         }
         else {
@@ -95,22 +95,11 @@ class Player {
                     // Vérifier si une entité ennemie se trouve sur la position cible
                     if (entityId in entities) {
                         const enemy = entities[entityId] // Accéder directement à l'instance de l'ennemi
-    
-                        // Vérification supplémentaire pour s'assurer que l'ennemi est valide
-                        if (enemy) {
-                            fightScreen(this, enemy) // Lancer le combat
-                            return; // Arrêter le mouvement après avoir commencé le combat
-                        } 
-                        else {
-                            console.error(`Enemy not found for ID: ${entityId}`)
-                        }
+                        fightScreen(this, enemy, {skipIntro: false}) // Lancer le combat
+                    if (enemy.isDead()){return}
                     } 
-                    else {
-                        console.error(`Entity ID ${entityId} not found in entities`)
-                    }
-                    return;
                 }
-    
+
                 // Efface l'ancienne position
                 map.entityLayer[this.y][this.x] = ''
     

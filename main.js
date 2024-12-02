@@ -11,9 +11,12 @@ const entities = {}
 const gameSounds = {}
 const gameImages = {}
 
+
 let map
 let player1
+let musicChoice
 
+let gameState = 'map'
 let direction = null
 let keyPressed = false
 
@@ -49,6 +52,7 @@ async function loadAllImages() {
             loadImage('assets/boss.png'),
             loadImage('assets/chest1.png'),
             loadImage('assets/chest2.png'),
+            loadImage('assets/fightBackground.png'),
             loadImage('assets/mummy.png'),
             loadImage('assets/player.png'),
             loadImage('assets/skeletonMage.png'),
@@ -75,10 +79,17 @@ async function loadAllSounds() {
     try {
         const soundFiles = [
             'assets/sounds/chest.wav',
+            'assets/sounds/dead.wav',
+            'assets/sounds/hit1.wav',
+            'assets/sounds/hit2.wav',
             'assets/sounds/move.wav',
             'assets/sounds/musicHerb.wav',
+            'assets/sounds/musicFight1.wav',
+            'assets/sounds/musicFight2.wav',
             'assets/sounds/jump.wav',
+            'assets/sounds/select.wav',
             'assets/sounds/trap.wav',
+            'assets/sounds/quit.wav',
             'assets/sounds/wall.wav',
 
         ];
@@ -143,6 +154,8 @@ async function initializeGame() {
     addToConsole("Knight's Quest JS", 'white');
     await loadAllSounds();
     await loadAllImages();
+    gameSounds['musicHerb'].volume = 0.15;
+    gameSounds['musicHerb'].loop = true;
     window.gameImages = gameImages;
 
     map = new Map({ width: 16, height: 16, biome: 'random', name: 'The Forest' });
@@ -172,33 +185,205 @@ function restartGame() {
     initializeGame();
 }
 
-export function fightScreen(player, enemy) {
-    addToConsole(`Fight started between:`)
-    addToConsole(`${player.name} level:${player.level} xp:${player.xp}/${player.xpMax} hp:${player.hp}/${player.hpMax} gp:${player.gold}`)
-    addToConsole(`${enemy.id} ${enemy.name} level:${enemy.level} xp:${enemy.xp}/${enemy.xpMax} hp:${enemy.hp}/${enemy.hpMax} gp:${enemy.gold}`)
+function drawBar(character, type, color, x, y, width, height) {
+    if (type === 'health') {
+        const healthPercentage = character.hp / character.hpMax;
 
+        // Dessiner le fond de la barre de vie (en gris)
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(x, y, width, height);
+
+        // Dessiner la partie représentant la vie actuelle (en couleur)
+        ctx.fillStyle = color;
+        if (character.hp > 0) {
+            ctx.fillRect(x, y, width * healthPercentage, height);
+        } else {
+            ctx.fillRect(x, y, 0, height); // Barre vide si mort
+        }
+
+        // Ajouter un cadre autour de la barre de vie
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, width, height);
+
+        // Ajouter le texte représentant la vie actuelle
+        ctx.font = 'bold 18px Arial';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; // Aligner verticalement au milieu
+
+        // Définir le texte en fonction de la vie
+        let text;
+        if (character.hp <= 0) {
+            text = 'D E A D';
+        } else {
+            text = `${character.hp} / ${character.hpMax}`;
+        }
+
+        // Ajustement manuel pour assurer un meilleur centrage vertical
+        ctx.fillText(text, x + width / 2, y + height / 2 + 2);
+    }
+    else if (type === 'experience') {
+        const experiencePercentage = character.xp / character.xpMax;
+
+        // Dessiner le fond de la barre d'expérience (en gris)
+        ctx.fillStyle = 'gray';
+        ctx.fillRect(x, y, width, height);
+
+        // Dessiner la partie représentant l'expérience actuelle (en couleur)
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, width * experiencePercentage, height);
+
+        // Ajouter un cadre autour de la barre d'expérience
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, width, height);
+
+        // Ajouter le texte représentant l'expérience actuelle
+        ctx.font = 'bold 18px Arial';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; // Aligner verticalement au milieu
+        const text = `${character.xp} / ${character.xpMax}`;
+
+        // Ajustement manuel pour assurer un meilleur centrage vertical
+        ctx.fillText(text, x + width / 2, y + height / 2 + 2);
+    }  
+}
+
+
+function drawText(text, size, color, x, y) {
+    // Définir le style du texte
+    ctx.font = `bold ${size}px Arial`;
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(text, x, y);
+}
+
+function fightMenu(player, enemy, musicChoice) {
+    gameState = 'fightMenu';
+    let selectedIndex = 0; // Index de l'option actuellement sélectionnée
+
+    // Nettoyer la zone de menu avant de dessiner
+    drawText(`[ATTACK]`, 20, selectedIndex === 0 ? 'white' : 'grey', 60, 410);
+    drawText(`[RUN]`, 20, selectedIndex === 1 ? 'white' : 'grey', 60, 434);
+
+    // Fonction interne pour gérer les actions du menu
+    function handleMenuNavigation(event) {
+        if (event.key === 'ArrowUp') {
+            selectedIndex = (selectedIndex - 1 + 2) % 2; // Déplacer vers le haut (en cycle)
+            redrawMenu(); // Redessiner le menu après modification
+        } else if (event.key === 'ArrowDown') {
+            selectedIndex = (selectedIndex + 1) % 2; // Déplacer vers le bas (en cycle)
+            redrawMenu(); // Redessiner le menu après modification
+        } else if (event.key === 'Enter') {
+            // Action pour l'option sélectionnée
+            if (selectedIndex === 0) {
+                enemy.hp -= 25; // Dégâts infligés à l'ennemi
+                addToConsole(`${player.name} attaque ${enemy.id}`);
+                const hitSound = Math.random() < 0.5 ? gameSounds['hit1'] : gameSounds['hit2'];
+                hitSound.volume = 0.2;
+                hitSound.play();
+                
+                // Vérifier si l'ennemi est mort après l'attaque
+                if (enemy.isDead()) {
+                    window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
+                    addToConsole(`${enemy.id} est mort`, 'red');
+                    musicChoice.volume = 0;
+                    gameSounds['dead'].volume = 0.6;
+                    gameSounds['dead'].play()
+                    gameSounds['musicHerb'].volume = 0.15;
+                    gameState = 'map';
+                    requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
+                } else {
+                    // L'ennemi est encore vivant, continuer le combat
+                    window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
+                    fightScreen(player, enemy, { skipIntro: true });
+                }
+            } else if (selectedIndex === 1) {
+                addToConsole(`${player.name} décide de fuir`);
+                gameSounds['quit'].volume = 0.2;
+                gameSounds['quit'].play()
+                musicChoice.volume = 0;
+                gameSounds['musicHerb'].currentTime = 0
+                gameSounds['musicHerb'].volume = 0.15;
+                gameState = 'map';
+                window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
+                requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
+            }
+        }
+    }
+
+    // Avant d'ajouter l'écouteur, s'assurer qu'il n'y en a pas déjà un
+    window.removeEventListener('keydown', handleMenuNavigation);
+    window.addEventListener('keydown', handleMenuNavigation);
+
+    // Fonction pour redessiner le menu en fonction de la sélection actuelle
+    function redrawMenu() {
+        gameSounds['select'].volume = 0.6;
+        gameSounds['select'].play()
+        drawText(`[ATTACK]`, 20, selectedIndex === 0 ? 'white' : 'grey', 60, 410);
+        drawText(`[RUN]`, 20, selectedIndex === 1 ? 'white' : 'grey', 60, 434);
+    }
+}
+
+export function fightScreen(player, enemy, {skipIntro=false}) {
+    if (skipIntro === false) {
+        gameSounds['musicHerb'].volume = 0;
+        musicChoice = Math.random() < 0.5 ? gameSounds['musicFight1'] : gameSounds['musicFight2'];
+        musicChoice.volume = 0.2;
+        musicChoice.loop = true;
+        musicChoice.currentTime = 0;
+        musicChoice.play();
+        addToConsole(`Fight started between:`)
+        addToConsole(`${player.name} level:${player.level} xp:${player.xp}/${player.xpMax} hp:${player.hp}/${player.hpMax} gp:${player.gold}`)
+        addToConsole(`${enemy.id} ${enemy.name} level:${enemy.level} xp:${enemy.xp}/${enemy.xpMax} hp:${enemy.hp}/${enemy.hpMax} gp:${enemy.gold}`)
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(window.gameImages['fightBackground'], 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(window.gameImages['player'], 32, 280, 64, 64);
+    ctx.save();
+    ctx.scale(-1, 1);
+    if (enemy.id.includes('boss')) {ctx.drawImage(window.gameImages['boss'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('mummy')) {ctx.drawImage(window.gameImages['mummy'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('skeletonMage')) {ctx.drawImage(window.gameImages['skeletonMage'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('skeleton')) {ctx.drawImage(window.gameImages['skeleton'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('wolf')) {ctx.drawImage(window.gameImages['wolf'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('zombieBig')) {ctx.drawImage(window.gameImages['zombieBig'], -432 - 64, 280, 64, 64);}
+    else if (enemy.id.includes('zombie')) {ctx.drawImage(window.gameImages['zombie'], -432 - 64, 280, 64, 64);}
+    ctx.restore();
+    drawBar(player, 'health', 'green', 8, 8, 128, 20)
+    drawBar(player, 'experience', 'gold', 8, 36, 128, 20)
+    drawText(`${player.name}`, 20, 'blue', 64, 264)
+    drawBar(enemy, 'health', 'red', 376, 8, 128, 20)
+    drawBar(enemy, 'experience', 'gold', 376, 36, 128, 20)
+    drawText(`${enemy.id}`, 20, 'red', 460, 264)
+    console.log(enemy.isDead())
+    fightMenu(player, enemy, musicChoice)
 }
 
 function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    map.displayTerrain(ctx, tileSize);
-    map.displayEntities(ctx, tileSize);
-
-    if (direction) {
-        const { y, x } = player1;
-        if (direction === 'up') player1.move(y - 1, x, map, entities, gameSounds);
-        else if (direction === 'down') player1.move(y + 1, x, map, entities, gameSounds);
-        else if (direction === 'left') player1.move(y, x - 1, map, entities, gameSounds);
-        else if (direction === 'right') player1.move(y, x + 1, map, entities, gameSounds);
-
-        direction = null;
+    if (gameState === 'map') {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        map.displayTerrain(ctx, tileSize);
+        map.displayEntities(ctx, tileSize);
+    
+        if (direction) {
+            const { y, x } = player1;
+            if (direction === 'up') player1.move(y - 1, x, map, entities, gameSounds);
+            else if (direction === 'down') player1.move(y + 1, x, map, entities, gameSounds);
+            else if (direction === 'left') player1.move(y, x - 1, map, entities, gameSounds);
+            else if (direction === 'right') player1.move(y, x + 1, map, entities, gameSounds);
+    
+            direction = null;
+        }
+    
+        requestAnimationFrame(gameLoop); // Loop de 60hz basé sur le taux de l'écran
+    }
     }
 
-    requestAnimationFrame(gameLoop);
-}
-
-// Appel initial une fois que le DOM est chargé
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     initializeGame(); // Appeler le jeu après que le DOM soit prêt
 });
 
@@ -211,8 +396,6 @@ window.addEventListener('keydown', (event) => {
         else if (event.key === 'ArrowRight') direction = 'right';
 
         keyPressed = true;
-        gameSounds['musicHerb'].volume = 0.15;
-        gameSounds['musicHerb'].loop = true;
         gameSounds['musicHerb'].play();
     }
 });
@@ -221,7 +404,3 @@ window.addEventListener('keyup', () => {
     direction = null;
     keyPressed = false;
 });
-
-//gestion des sons de déplacement et musique
-//fight screen
-//inventory screen
