@@ -288,13 +288,17 @@ function fightMenu(player, enemy, musicChoice) {
                 
                 // Vérifier si l'ennemi est mort après l'attaque
                 if (enemy.isDead()) {
-                    window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                     addToConsole(`${enemy.id} est mort`, 'red');
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play()
                     gameSounds['musicHerb'].volume = 0.15;
+                    map.entityLayer[player.y][player.x] = '';
+                    map.entityLayer[enemy.y][enemy.x] = player.id;
+                    player.x = enemy.x
+                    player.y = enemy.y
                     gameState = 'map';
+                    window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                     requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
                 } else {
                     // L'ennemi est encore vivant, continuer le combat
@@ -359,7 +363,6 @@ export function fightScreen(player, enemy, {skipIntro=false}) {
     drawBar(enemy, 'health', 'red', 376, 8, 128, 20)
     drawBar(enemy, 'experience', 'gold', 376, 36, 128, 20)
     drawText(`${enemy.id}`, 20, 'red', 460, 264)
-    console.log(enemy.isDead())
     fightMenu(player, enemy, musicChoice)
 }
 

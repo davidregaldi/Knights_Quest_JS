@@ -31,10 +31,9 @@ class Player {
 
     isDead() {
         if (this.hp > 0) {
-            return false
-        }
-        else {
-            return true
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -81,25 +80,23 @@ class Player {
                     gameSounds['trap'].play()
                     this.foundChest('trappedChest')
                 } 
-                else if (
-                    entityId === 't1' ||
-                    entityId === 't2' ||
-                    entityId === 't3'
-                ) {
+                else if (['t1', 't2', 't3'].includes(entityId)) {
                     gameSounds['wall'].volume = 0.2;
-                    gameSounds['wall'].play()
-                    addToConsole('Tree collision')
+                    gameSounds['wall'].play();
+                    addToConsole('Tree collision');
                     return;
-                } 
+                }
                 else if (entityId !== '') {    
                     // Vérifier si une entité ennemie se trouve sur la position cible
                     if (entityId in entities) {
-                        const enemy = entities[entityId] // Accéder directement à l'instance de l'ennemi
-                        fightScreen(this, enemy, {skipIntro: false}) // Lancer le combat
-                    if (enemy.isDead()){return}
-                    } 
+                        const enemy = entities[entityId];
+                        fightScreen(this, enemy, { skipIntro: false });
+                        // Vérifier si l'ennemi est toujours vivant après le combat
+                        if (!enemy.isDead()) {
+                            return;  // Stopper si l'ennemi est encore en vie
+                        }
+                    }
                 }
-
                 // Efface l'ancienne position
                 map.entityLayer[this.y][this.x] = ''
     
