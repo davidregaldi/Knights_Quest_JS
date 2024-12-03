@@ -157,6 +157,7 @@ async function initializeGame() {
     await loadAllSounds();
     await loadAllImages();
     if (musicChoice !== undefined) {musicChoice.volume = 0};
+    if (musicMap !== undefined) {musicMap.volume = 0};
 
     window.gameImages = gameImages;
     gameState = 'map'
