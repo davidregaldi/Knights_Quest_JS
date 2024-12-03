@@ -2,7 +2,7 @@ import { addToConsole } from '../main.js'
 import Player from './Player.js'
 
 class Enemy extends Player {
-    constructor({id = 'enemy1', name = 'Enemy', y = 'random', x = 'random', consColor='brown', level = '', strengh = 15, xpMax = 100, xp = 0, hpMax = 100, hp = 100, gold = 5, map, entities}) {
+    constructor({id = 'enemy1', name = 'Enemy', y = 'random', x = 'random', consColor='brown', level = '', strengh = 15, xpMax = 100, xp = 0, hpMax = 100, hp = 100, potion = 0, gold = 5, map, entities}) {
         super({ id, name, y, x, consColor,level, strengh, xpMax, xp, hpMax, hp, gold, map, entities })
         
         if (this.level === '') {
@@ -16,7 +16,35 @@ class Enemy extends Player {
         this.gold = Math.floor(this.randomizeValue(gold) * this.level)
         this.hpMax = this.hpMax + Math.floor((this.hpMax*(this.level-1)*0.20))
         this.hp = this.hpMax
+        this.potion = potion
+        let i = true
+        while (i === true) {
+            if (Math.random() < 1 / 3) {
+                this.potion += 1;
+            }
+
+            else {
+                i = false
+            }
+        }
     };
+
+    drop(target) {
+        if (this.potion > 0) {
+            target.potion += this.potion
+            addToConsole(`${this.id} dropped: ${this.potion} potion(s)`)
+        }
+        if (this.gold > 0) {
+            target.gold += this.gold
+            addToConsole(`${this.id} dropped: ${this.gold}gp`, 'gold')
+
+        }
+        if (this.xp > 0) {
+            target.xp += this.xp
+            addToConsole(`${target.name} gains ${this.xp}xp`, 'orchid')
+
+        }
+    }
 
     attack(target, gameSounds) {
         const randomFactor = Math.random() * 0.4 + 0.8;
@@ -25,7 +53,7 @@ class Enemy extends Player {
         const hitSound = Math.random() < 0.5 ? gameSounds['hit1'] : gameSounds['hit2'];
         hitSound.volume = 0.2;
         hitSound.play();
-        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.name}`, 'red');
+        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.name}`, this.consColor);
     }
 
 }

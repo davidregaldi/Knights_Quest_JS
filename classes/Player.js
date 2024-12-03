@@ -3,7 +3,7 @@ import { gameOver } from '../main.js';
 import { fightScreen } from '../main.js';
 
 class Player {
-    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, strengh = 20, xpMax = 250, xp = 0, hpMax = 100, hp = 100, gold = 20, map, entities}) {
+    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, strengh = 20, xpMax = 250, xp = 0, hpMax = 100, hp = 100, potion = 2, gold = 20, map, entities}) {
         this.id = id
         this.name = name
         this.y = y
@@ -15,6 +15,7 @@ class Player {
         this.xp = xp
         this.hpMax = hpMax
         this.hp = hp
+        this.potion = potion
         this.gold = gold
 
         if (this.y === 'random' && this.x === 'random') {
@@ -28,6 +29,21 @@ class Player {
 
         entities[this.id] = this;
         addToConsole(`${this.id} ${this.x} ${this.y}`, consColor)
+    }
+
+    usePotion() {
+        if (this.hp === this.hpMax) {
+            addToConsole(`Santé déjà au maximum}`, 'lime')
+        }
+        else if (this.potion > 0) {
+            this.potion -= 1
+            const randomFactor = Math.random() * 0.4 + 0.8;
+            const lifeRestore = Math.floor((this.hpMax * 0.50)*randomFactor)
+            this.hp = this.hp + lifeRestore
+            if (this.hp > this.hpMax) {this.hp = this.hpMax}
+            addToConsole(`La potion restaure: ${lifeRestore}`, 'lime')
+        }
+        addToConsole(`Potions restantes: ${this.potion}`)
     }
 
     isDead() {
@@ -49,7 +65,7 @@ class Player {
         hitSound.play();
     
         // Afficher le message de dégâts
-        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.name}`, 'blue');
+        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.id}`, this.consColor);
     }
 
     move(newY, newX, map, entities, gameSounds) {
@@ -130,17 +146,24 @@ class Player {
     
     foundChest(chestType) {
         let gold
+        let pot
         if (chestType === 'smallChest') {
             gold = this.randomizeValue(20)
             this.gold = this.gold + gold
-            addToConsole(`${this.name} found a chest! ${gold}gp`, 'gold')
-            addToConsole(`ìnventory gp: ${this.gold}`)
+            pot = this.randomizeValue(2) - 1
+            this.potion += pot
+            if (pot > 0) {addToConsole(`${this.name} found a chest! ${pot}potion, ${gold}gp`, 'gold')}
+            else { addToConsole(`${this.name} found a chest! ${gold}gp`, 'gold') }
+            addToConsole(`ìnventory: ${this.potion}potion(s), ${this.gold}gp`)
         }
         else if (chestType === 'bigChest') {
             gold = this.randomizeValue(50)
             this.gold = this.gold + gold
-            addToConsole(`${this.name} found a big chest! ${gold}gp`, 'gold')
-            addToConsole(`ìnventory gp: ${this.gold}`)
+            pot = this.randomizeValue(4) - 1
+            this.potion += pot
+            if (pot > 0) {addToConsole(`${this.name} found a big chest! ${pot}potion(s), ${gold}gp`, 'gold')}
+            else { addToConsole(`${this.name} found a big chest! ${gold}gp`, 'gold') }
+            addToConsole(`ìnventory: ${this.potion}potion(s), ${this.gold}gp`)
         }
         else if (chestType === 'trappedChest') {
             addToConsole(`${this.name} triggered a trap !`, 'brown')

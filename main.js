@@ -275,54 +275,67 @@ function drawText(text, size, color, x, y) {
 function fightMenu(player, enemy, musicChoice) {
     gameState = 'fightMenu';
     let selectedIndex = 0; // Index de l'option actuellement sélectionnée
+    const menuOptions = 3; // Le nombre total d'options du menu
 
     // Nettoyer la zone de menu avant de dessiner
-    drawText(`[ATTACK]`, 20, selectedIndex === 0 ? 'white' : 'grey', 60, 410);
-    drawText(`[RUN]`, 20, selectedIndex === 1 ? 'white' : 'grey', 60, 434);
+    drawText(`[ATTACK] (${player.strengh})`, 20, selectedIndex === 0 ? 'white' : 'grey', 80, 410);
+    drawText(`[POTION] (${player.potion})`, 20, selectedIndex === 1 ? 'white' : 'grey', 72, 434);
+    drawText(`[RUN]`, 20, selectedIndex === 2 ? 'white' : 'grey', 40, 458);
 
     // Fonction interne pour gérer les actions du menu
     function handleMenuNavigation(event) {
         if (event.key === 'ArrowUp') {
-            selectedIndex = (selectedIndex - 1 + 2) % 2; // Déplacer vers le haut (en cycle)
+            gameSounds['select'].volume = 0.6;
+            gameSounds['select'].play();
+            selectedIndex = (selectedIndex - 1 + menuOptions) % menuOptions; // Déplacer vers le haut (en cycle)
             redrawMenu(); // Redessiner le menu après modification
         } else if (event.key === 'ArrowDown') {
-            selectedIndex = (selectedIndex + 1) % 2; // Déplacer vers le bas (en cycle)
+            gameSounds['select'].volume = 0.6;
+            gameSounds['select'].play();
+            selectedIndex = (selectedIndex + 1) % menuOptions; // Déplacer vers le bas (en cycle)
             redrawMenu(); // Redessiner le menu après modification
         } else if (event.key === 'Enter') {
             // Action pour l'option sélectionnée
             if (selectedIndex === 0) {
-                player.attack(enemy, gameSounds)
+                // Option "ATTACK"
+                player.attack(enemy, gameSounds);
                 // Vérifier si l'ennemi est mort après l'attaque
                 if (enemy.isDead()) {
                     addToConsole(`${enemy.id} est mort`, 'red');
+                    enemy.drop(player)
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
-                    gameSounds['dead'].play()
-                    musicMap.currentTime = 0
+                    gameSounds['dead'].play();
+                    musicMap.currentTime = 0;
                     musicMap.volume = 0.15;
                     map.entityLayer[player.y][player.x] = '';
                     map.entityLayer[enemy.y][enemy.x] = player.id;
-                    player.x = enemy.x
-                    player.y = enemy.y
+                    player.x = enemy.x;
+                    player.y = enemy.y;
                     gameState = 'map';
                     window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                     requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
                 } else {
                     // L'ennemi est encore vivant, continuer le combat
-                    enemy.attack(player, gameSounds)
+                    enemy.attack(player, gameSounds);
                     if (player.isDead()) {
-                        addToConsole(`${player.name} est mort`, 'pink')
-                        gameOver()
+                        addToConsole(`${player.name} est mort`, 'pink');
+                        gameOver();
                     }
                     window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                     fightScreen(player, enemy, { skipIntro: true });
                 }
             } else if (selectedIndex === 1) {
+                player.usePotion()
+                window.removeEventListener('keydown', handleMenuNavigation);
+                fightScreen(player, enemy, { skipIntro: true });
+            } else if (selectedIndex === 2) {
+                // Option "RUN"
                 addToConsole(`${player.name} décide de fuir`);
                 gameSounds['quit'].volume = 0.2;
-                gameSounds['quit'].play()
+                gameSounds['quit'].play();
                 musicChoice.volume = 0;
-                musicMap.currentTime = 0
+                musicMap.currentTime = 0;
                 musicMap.volume = 0.15;
                 gameState = 'map';
                 window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
@@ -331,18 +344,14 @@ function fightMenu(player, enemy, musicChoice) {
         }
     }
 
-    // Avant d'ajouter l'écouteur, s'assurer qu'il n'y en a pas déjà un
-    if (!player.isDead()){
-        window.removeEventListener('keydown', handleMenuNavigation);
-        window.addEventListener('keydown', handleMenuNavigation);
-    }
+    // Ajouter l'écouteur d'événement local pour naviguer dans le menu
+    window.addEventListener('keydown', handleMenuNavigation);
 
     // Fonction pour redessiner le menu en fonction de la sélection actuelle
     function redrawMenu() {
-        gameSounds['select'].volume = 0.6;
-        gameSounds['select'].play()
-        drawText(`[ATTACK]`, 20, selectedIndex === 0 ? 'white' : 'grey', 60, 410);
-        drawText(`[RUN]`, 20, selectedIndex === 1 ? 'white' : 'grey', 60, 434);
+        drawText(`[ATTACK] (${player.strengh})`, 20, selectedIndex === 0 ? 'white' : 'grey', 80, 410);
+        drawText(`[POTION] (${player.potion})`, 20, selectedIndex === 1 ? 'white' : 'grey', 72, 434);
+        drawText(`[RUN]`, 20, selectedIndex === 2 ? 'white' : 'grey', 40, 458);
     }
 }
 
@@ -372,10 +381,10 @@ export function fightScreen(player, enemy, {skipIntro=false}) {
     else if (enemy.id.includes('zombie')) {ctx.drawImage(window.gameImages['zombie'], -432 - 64, 280, 64, 64);}
     ctx.restore();
     drawBar(player, 'health', 'green', 8, 8, 128, 20)
-    drawBar(player, 'experience', 'gold', 8, 36, 128, 20)
+    drawBar(player, 'experience', 'orchid', 8, 36, 128, 20)
     drawText(`${player.name}`, 20, 'blue', 64, 264)
     drawBar(enemy, 'health', 'red', 376, 8, 128, 20)
-    drawBar(enemy, 'experience', 'gold', 376, 36, 128, 20)
+    drawBar(enemy, 'experience', 'orchid', 376, 36, 128, 20)
     drawText(`${enemy.id}`, 20, 'red', 460, 264)
     fightMenu(player, enemy, musicChoice)
 }
@@ -425,6 +434,7 @@ window.addEventListener('keyup', () => {
 
 // ajouter les potions de vie
 // le monstre drop de l'xp et des potions
+// joueur peut level up
 // intégrer la rivière
 // system de pause via gamestate
 // prévoir 2 musiques correspondantes au biome et 2 nouvelles musiques de combat
