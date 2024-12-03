@@ -348,7 +348,9 @@ function fightMenu(player, enemy, musicChoice) {
     }
 
     // Ajouter l'écouteur d'événement local pour naviguer dans le menu
-    window.addEventListener('keydown', handleMenuNavigation);
+    if (!player.isDead()) {
+        window.addEventListener('keydown', handleMenuNavigation);          
+    }
 
     // Fonction pour redessiner le menu en fonction de la sélection actuelle
     function redrawMenu() {
@@ -435,10 +437,7 @@ window.addEventListener('keyup', () => {
 });
 
 
-// ajouter les potions de vie
-// le monstre drop de l'xp et des potions
 // joueur peut level up
-// intégrer la rivière
 // system de pause via gamestate
 // prévoir 2 musiques correspondantes au biome et 2 nouvelles musiques de combat
 // ajouter le portail de fin de niveau quand le boss est mort
