@@ -297,6 +297,7 @@ function fightMenu(player, enemy, musicChoice) {
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play()
+                    musicMap.currentTime = 0
                     musicMap.volume = 0.15;
                     map.entityLayer[player.y][player.x] = '';
                     map.entityLayer[enemy.y][enemy.x] = player.id;
@@ -346,7 +347,7 @@ function fightMenu(player, enemy, musicChoice) {
 
 export function fightScreen(player, enemy, {skipIntro=false}) {
     if (skipIntro === false) {
-        gameSounds['musicHerb'].volume = 0;
+        musicMap.volume = 0;
         musicChoice = Math.random() < 0.5 ? gameSounds['musicFight1'] : gameSounds['musicFight2'];
         musicChoice.volume = 0.2;
         musicChoice.loop = true;
@@ -420,7 +421,9 @@ window.addEventListener('keyup', () => {
     keyPressed = false;
 });
 
-// intégrer la rivière
+
 // ajouter les potions de vie
 // le monstre drop de l'xp et des potions
-// prévoir 3 musiques correspondantes au biome et 2 nouvelles musiques de combat
+// intégrer la rivière
+// system de pause via gamestate
+// prévoir 2 musiques correspondantes au biome et 2 nouvelles musiques de combat
