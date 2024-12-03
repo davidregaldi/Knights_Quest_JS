@@ -154,9 +154,13 @@ async function initializeGame() {
     addToConsole("Knight's Quest JS", 'white');
     await loadAllSounds();
     await loadAllImages();
+    gameSounds['musicHerb'].currentTime = 0;
     gameSounds['musicHerb'].volume = 0.15;
     gameSounds['musicHerb'].loop = true;
+    if (musicChoice !== undefined) {musicChoice.volume = 0};
+
     window.gameImages = gameImages;
+    gameState = 'map'
 
     map = new Map({ width: 16, height: 16, biome: 'random', name: 'The Forest' });
 
@@ -280,12 +284,7 @@ function fightMenu(player, enemy, musicChoice) {
         } else if (event.key === 'Enter') {
             // Action pour l'option sélectionnée
             if (selectedIndex === 0) {
-                enemy.hp -= 25; // Dégâts infligés à l'ennemi
-                addToConsole(`${player.name} attaque ${enemy.id}`);
-                const hitSound = Math.random() < 0.5 ? gameSounds['hit1'] : gameSounds['hit2'];
-                hitSound.volume = 0.2;
-                hitSound.play();
-                
+                player.attack(enemy, gameSounds)
                 // Vérifier si l'ennemi est mort après l'attaque
                 if (enemy.isDead()) {
                     addToConsole(`${enemy.id} est mort`, 'red');
@@ -302,6 +301,11 @@ function fightMenu(player, enemy, musicChoice) {
                     requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
                 } else {
                     // L'ennemi est encore vivant, continuer le combat
+                    enemy.attack(player, gameSounds)
+                    if (player.isDead()) {
+                        addToConsole(`${player.name} est mort`, 'pink')
+                        gameOver()
+                    }
                     window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                     fightScreen(player, enemy, { skipIntro: true });
                 }
@@ -320,8 +324,10 @@ function fightMenu(player, enemy, musicChoice) {
     }
 
     // Avant d'ajouter l'écouteur, s'assurer qu'il n'y en a pas déjà un
-    window.removeEventListener('keydown', handleMenuNavigation);
-    window.addEventListener('keydown', handleMenuNavigation);
+    if (!player.isDead()){
+        window.removeEventListener('keydown', handleMenuNavigation);
+        window.addEventListener('keydown', handleMenuNavigation);
+    }
 
     // Fonction pour redessiner le menu en fonction de la sélection actuelle
     function redrawMenu() {
@@ -407,3 +413,10 @@ window.addEventListener('keyup', () => {
     direction = null;
     keyPressed = false;
 });
+
+// intégrer la rivière
+// le monstre attaque également
+// ajouter un parametre strengh pour gérer les dégats
+// ajouter les potions de vie
+// le monstre drop de l'xp et des potions
+// prévoir 3 musiques correspondantes au biome et 2 nouvelles musiques de combat

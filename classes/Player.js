@@ -3,13 +3,14 @@ import { gameOver } from '../main.js';
 import { fightScreen } from '../main.js';
 
 class Player {
-    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, xpMax = 250, xp = 0, hpMax = 100, hp = 100, gold = 20, map, entities}) {
+    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, strengh = 20, xpMax = 250, xp = 0, hpMax = 100, hp = 100, gold = 20, map, entities}) {
         this.id = id
         this.name = name
         this.y = y
         this.x = x
         this.consColor = consColor
         this.level = level
+        this.strengh = strengh
         this.xpMax = 250 * level
         this.xp = xp
         this.hpMax = hpMax
@@ -35,6 +36,20 @@ class Player {
         } else {
             return true;
         }
+    }
+
+    attack(target, gameSounds) {
+        const randomFactor = Math.random() * 0.4 + 0.8;
+        const damage = Math.round(this.strengh * randomFactor); // Calculer le dégât en arrondissant à l'entier le plus proche
+        target.hp -= damage; // Appliquer les dégâts à la cible
+    
+        // Choisir et jouer un son de frappe
+        const hitSound = Math.random() < 0.5 ? gameSounds['hit1'] : gameSounds['hit2'];
+        hitSound.volume = 0.2;
+        hitSound.play();
+    
+        // Afficher le message de dégâts
+        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.name}`, 'blue');
     }
 
     move(newY, newX, map, entities, gameSounds) {
@@ -146,7 +161,7 @@ class Player {
     }
 
     randomizeMinMax(minValue, maxValue) {
-        return Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue
+        return Math.random() * (maxValue - minValue + 1) + minValue
     }
 }
 
