@@ -42,6 +42,49 @@ class Map {
         return groundLayer;
     }
 
+    generateWater() {
+        addToConsole(`Génère une rivière...`);
+        let y = Math.floor(this.height / 2); // Choisir un point de départ initial à la moitié de la hauteur
+    
+        // Génération aléatoire du nombre de ponts (entre 1 et 3)
+        const numberOfBridges = Math.floor(Math.random() * 3) + 1;
+        const bridgePositions = [];
+    
+        // Générer des positions de pont aléatoires sur l'axe X (largeur de la rivière)
+        while (bridgePositions.length < numberOfBridges) {
+            const randomX = Math.floor(Math.random() * this.width);
+            if (!bridgePositions.includes(randomX)) {
+                bridgePositions.push(randomX);
+            }
+        }
+    
+        for (let x = 0; x < this.width; x++) {
+            // Définir la position de l'eau sur la case courante
+            if (this.biome === 'magma') {
+                this.entityLayer[y][x] = 'lava';
+                this.terrainLayer[y][x] = 'lava';
+            }
+            else {
+                this.entityLayer[y][x] = 'water';
+                this.terrainLayer[y][x] = 'water';
+            }
+    
+            // Placer un pont si la position correspond à un pont
+            if (bridgePositions.includes(x)) {
+                this.entityLayer[y][x] = 'bridge';
+            }
+    
+            // Déterminer la direction suivante (monter, descendre ou rester)
+            const direction = Math.floor(Math.random() * 3);
+            if (direction === 0 && y > 0) {
+                y--; // Monter
+            } else if (direction === 1 && y < this.height - 1) {
+                y++; // Descendre
+            }
+            // Sinon, rester à la même hauteur
+        }
+    }
+
     generateStuff({
         stumpTreeCount = 0, smallTreeCount = 0, mediumTreeCount = 0, bigTreeCount = 0,  // Trees
         smallChestCount = 0, bigChestCount = 0, trappedChestCount = 0,                                        // Chests
@@ -62,41 +105,45 @@ class Map {
     }
 
     displayTerrain(ctx, tileSize) {
-        // console.log(this.terrainLayer);
         let colors = {}
         if (this.biome ==='herb') {
             colors = {
                 "g": "#C2D757",
                 "G": "#B2D254",
-                "w": "#4ebcb9",
+                "water": "#4ebcb9",
             }
         }
         else if (this.biome === 'dust') {
             colors = {
                 "g": "#F8ECC9",
                 "G": "#FCF7E9",
-                "w": "#4ebcb9",
+                "water": "#4ebcb9",
             }
         }
         else if (this.biome === 'snow') {
             colors = {
                 "g": "snow",
                 "G": "aliceblue",
-                "w": "lightskyblue",
+                "water": "lightskyblue",
             }
         }
         else if (this.biome === 'magma') {
             colors = {
                 "g": "sienna",
                 "G": "peru",
-                "w": "orange",
+                "lava": "orange",
             }
         }
+        // console.log(this.terrainLayer);
         for (let row = 0; row < this.terrainLayer.length; row++) {
             for (let col = 0; col < this.terrainLayer[row].length; col++) {
                 const tile = this.terrainLayer[row][col];
                 if (tile === 'g') { ctx.fillStyle = colors[tile]; ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 'G') { ctx.fillStyle = colors[tile]; ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 'water') { ctx.fillStyle = colors[tile]; ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile === 'lava') { ctx.fillStyle = colors[tile]; ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);}
+
+
             }
         }
     }
@@ -106,7 +153,8 @@ class Map {
         for (let row = 0; row < this.entityLayer.length; row++) {
             for (let col = 0; col < this.entityLayer[row].length; col++) {
                 const tile = this.entityLayer[row][col];
-                if (tile.includes('boss')) {ctx.drawImage(window.gameImages['boss'], col * tileSize, row * tileSize, tileSize, tileSize);}
+                if (tile === 'bridge') {ctx.drawImage(window.gameImages['bridge'], col * tileSize, row * tileSize, tileSize, tileSize);}
+                else if (tile.includes('boss')) {ctx.drawImage(window.gameImages['boss'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('mummy')) {ctx.drawImage(window.gameImages['mummy'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile.includes('player')) {ctx.drawImage(window.gameImages['player'], col * tileSize, row * tileSize, tileSize, tileSize);}
                 else if (tile === 'chest1' || tile === 'chest3') {ctx.drawImage(window.gameImages['chest1'], col * tileSize, row * tileSize, tileSize, tileSize);}

@@ -74,7 +74,7 @@ class Player {
                 // Vérifier si le joueur rencontre t0 pour tenter de sauter par-dessus
                 let entityId = map.entityLayer[newY][newX]
     
-                if (entityId === 't0') {
+                if (entityId === 't0' || entityId === 'bridge') {
                     // Tenter de sauter par-dessus la case t0
                     const jumpY = newY + (newY - this.y)
                     const jumpX = newX + (newX - this.x)
@@ -83,8 +83,14 @@ class Player {
                         // Mise à jour de newY et newX pour continuer avec la position après le saut
                         newY = jumpY
                         newX = jumpX
-                        gameSounds['jump'].volume = 0.2;
-                        gameSounds['jump'].play()
+                        if (entityId === 't0') {
+                            gameSounds['jump'].volume = 0.2;
+                            gameSounds['jump'].play()
+                        }
+                        else {
+                            gameSounds['bridge'].volume = 0.8;
+                            gameSounds['bridge'].play();
+                        }
                     } 
                     else {
                         // Hors des limites après le saut
@@ -115,6 +121,24 @@ class Player {
                     gameSounds['wall'].volume = 0.2;
                     gameSounds['wall'].play();
                     addToConsole('Tree collision');
+                    return;
+                }
+                else if (entityId === 'water') {
+                    gameSounds['water'].volume = 0.2;
+                    gameSounds['water'].play();
+                    addToConsole('water collision');
+                    return;
+                }
+                else if (entityId === 'lava') {
+                    gameSounds['water'].volume = 0.2;
+                    gameSounds['water'].play();
+                    const hpLost = this.randomizeValue(10)
+                    this.hp -= hpLost
+                    if (this.isDead() === false) { addToConsole(`${this.name} is burning in lava and lost ${hpLost}hp`, 'orange')}
+                    else {        
+                        addToConsole(`${this.name} is dead...`, this.consColor)
+                        gameOver()
+                    }
                     return;
                 }
                 else if (entityId !== '') {    

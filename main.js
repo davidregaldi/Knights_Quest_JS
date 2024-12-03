@@ -51,6 +51,7 @@ async function loadAllImages() {
     try {
         const images = await Promise.all([
             loadImage('assets/boss.png'),
+            loadImage('assets/bridge.png'),
             loadImage('assets/chest1.png'),
             loadImage('assets/chest2.png'),
             loadImage('assets/fightBackground.png'),
@@ -79,6 +80,7 @@ async function loadAllImages() {
 async function loadAllSounds() {
     try {
         const soundFiles = [
+            'assets/sounds/bridge.wav',
             'assets/sounds/chest.wav',
             'assets/sounds/dead.wav',
             'assets/sounds/hit1.wav',
@@ -93,6 +95,7 @@ async function loadAllSounds() {
             'assets/sounds/trap.wav',
             'assets/sounds/quit.wav',
             'assets/sounds/wall.wav',
+            'assets/sounds/water.wav',
 
         ];
 
@@ -170,7 +173,7 @@ async function initializeGame() {
     musicMap.currentTime = 0;
     musicMap.volume = 0.15;
     musicMap.loop = true;
-
+    map.generateWater()
     map.generateStuff({
         stumpTreeCount: 8, smallTreeCount: 16, mediumTreeCount: 24, bigTreeCount: 8, 
         smallChestCount: 10, bigChestCount: 6, trappedChestCount: 4,
@@ -438,3 +441,4 @@ window.addEventListener('keyup', () => {
 // intégrer la rivière
 // system de pause via gamestate
 // prévoir 2 musiques correspondantes au biome et 2 nouvelles musiques de combat
+// ajouter le portail de fin de niveau quand le boss est mort
