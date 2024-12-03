@@ -15,6 +15,7 @@ const gameImages = {}
 let map
 let player1
 let musicChoice
+let musicMap
 
 let gameState = 'map'
 let direction = null
@@ -84,6 +85,7 @@ async function loadAllSounds() {
             'assets/sounds/hit2.wav',
             'assets/sounds/move.wav',
             'assets/sounds/musicHerb.wav',
+            'assets/sounds/musicMagma.wav',
             'assets/sounds/musicFight1.wav',
             'assets/sounds/musicFight2.wav',
             'assets/sounds/jump.wav',
@@ -154,15 +156,19 @@ async function initializeGame() {
     addToConsole("Knight's Quest JS", 'white');
     await loadAllSounds();
     await loadAllImages();
-    gameSounds['musicHerb'].currentTime = 0;
-    gameSounds['musicHerb'].volume = 0.15;
-    gameSounds['musicHerb'].loop = true;
     if (musicChoice !== undefined) {musicChoice.volume = 0};
 
     window.gameImages = gameImages;
     gameState = 'map'
 
     map = new Map({ width: 16, height: 16, biome: 'random', name: 'The Forest' });
+
+    if (map.biome === 'magma') {musicMap = gameSounds['musicMagma']}
+    else {musicMap = gameSounds['musicHerb']}
+
+    musicMap.currentTime = 0;
+    musicMap.volume = 0.15;
+    musicMap.loop = true;
 
     map.generateStuff({
         stumpTreeCount: 8, smallTreeCount: 16, mediumTreeCount: 24, bigTreeCount: 8, 
@@ -291,7 +297,7 @@ function fightMenu(player, enemy, musicChoice) {
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play()
-                    gameSounds['musicHerb'].volume = 0.15;
+                    musicMap.volume = 0.15;
                     map.entityLayer[player.y][player.x] = '';
                     map.entityLayer[enemy.y][enemy.x] = player.id;
                     player.x = enemy.x
@@ -314,8 +320,8 @@ function fightMenu(player, enemy, musicChoice) {
                 gameSounds['quit'].volume = 0.2;
                 gameSounds['quit'].play()
                 musicChoice.volume = 0;
-                gameSounds['musicHerb'].currentTime = 0
-                gameSounds['musicHerb'].volume = 0.15;
+                musicMap.currentTime = 0
+                musicMap.volume = 0.15;
                 gameState = 'map';
                 window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                 requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
@@ -405,7 +411,7 @@ window.addEventListener('keydown', (event) => {
         else if (event.key === 'ArrowRight') direction = 'right';
 
         keyPressed = true;
-        gameSounds['musicHerb'].play();
+        musicMap.play();
     }
 });
 
@@ -415,8 +421,6 @@ window.addEventListener('keyup', () => {
 });
 
 // intégrer la rivière
-// le monstre attaque également
-// ajouter un parametre strengh pour gérer les dégats
 // ajouter les potions de vie
 // le monstre drop de l'xp et des potions
 // prévoir 3 musiques correspondantes au biome et 2 nouvelles musiques de combat
