@@ -140,7 +140,7 @@ export function gameOver() {
     gameState = 'gameOver'
     drawGameOverEffect()
     musicMap.volume = 0
-    gameSounds['musicGameOver'].volume = 0.03;
+    gameSounds['musicGameOver'].volume = 0.1;
     gameSounds['musicGameOver'].loop = false;
     gameSounds['musicGameOver'].currentTime = 0;
     gameSounds['musicGameOver'].play();
@@ -220,7 +220,7 @@ async function initializeGame() {
     else {musicMap = gameSounds['musicHerb']}
 
     musicMap.currentTime = 0;
-    musicMap.volume = 0.15;
+    musicMap.volume = 0.5;
     musicMap.loop = true;
     map.generateWater()
     map.generateStuff({
@@ -383,7 +383,7 @@ function fightMenu(player, enemy, musicChoice) {
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play();
                     musicMap.currentTime = 0;
-                    musicMap.volume = 0.15;
+                    musicMap.volume = 0.5;
                     removeEntity(enemy.id);
                     map.entityLayer[player.y][player.x] = '';
                     map.entityLayer[enemy.y][enemy.x] = player.id;
@@ -414,7 +414,7 @@ function fightMenu(player, enemy, musicChoice) {
                 gameSounds['quit'].play();
                 musicChoice.volume = 0;
                 musicMap.currentTime = 0;
-                musicMap.volume = 0.15;
+                musicMap.volume = 0.5;
                 gameState = 'map';
                 window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action
                 requestAnimationFrame(gameLoop); // Revenir à l'écran de carte
@@ -439,7 +439,7 @@ export function fightScreen(player, enemy, {skipIntro=false}) {
     if (skipIntro === false) {
         musicMap.volume = 0;
         musicChoice = Math.random() < 0.5 ? gameSounds['musicFight1'] : gameSounds['musicFight2'];
-        musicChoice.volume = 0.2;
+        musicChoice.volume = 0.5;
         musicChoice.loop = true;
         musicChoice.currentTime = 0;
         musicChoice.play();
