@@ -32,7 +32,7 @@ div.console {
     border: 1px solid green;
     color: green;
     font-family: Consolas, "Courier New", monospace;
-    font-weight: bold;
+    font-weight: light;
     overflow-y: auto; /* Permet de scroller si le texte dépasse */
 
 }

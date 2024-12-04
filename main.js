@@ -6,30 +6,45 @@ const canvas = document.querySelector('.game')
 const ctx = canvas.getContext('2d')
 const tileSize = 32
 
-// Collection d'entités: players, enemies
-const entities = {}
+// Medias
 const gameSounds = {}
 const gameImages = {}
 
+// Collection d'entités: players, enemies
+let entities = {}
 
+// Carte du jeu
 let map
-let player1
-let musicChoice
-let musicMap
 
-let gameState = 'map'
+// Lié aux déplacements et touches pressées
 let direction = null
 let keyPressed = false
 
-export function addToConsole(message, color = 'green') {
-    const consoleDiv = document.querySelector('.console')
-    const newLine = document.createElement('p')
-    
-    newLine.textContent = message
-    newLine.style.color = color
+// Joueur
+let player1
 
-    consoleDiv.appendChild(newLine)
-    consoleDiv.scrollTop = consoleDiv.scrollHeight
+// Musique de combat
+let musicChoice
+
+// Musique de Carte
+let musicMap
+
+// Etat de la gameloop: map, fightMenu, pause
+let gameState = 'map'
+
+export function addToConsole(message, color = 'green', bold = true) {
+    const consoleDiv = document.querySelector('.console');
+    const newLine = document.createElement('p');
+
+    // Ajoute le texte et applique le style
+    newLine.textContent = message;
+    newLine.style.color = color;
+    if (bold) {
+        newLine.style.fontWeight = '900'; // Force le gras
+    }
+
+    consoleDiv.appendChild(newLine);
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
 }
 
 export function clearConsole() {
@@ -119,19 +134,30 @@ async function loadAllSounds() {
     }
 }
 
+export function gameOver() {
+    addToConsole('GAME OVER - new game in 10...', 'white')
+    entities = {}
+    player1 = undefined
+    setTimeout(() => {restartGame()}, 10000);
+}
+
+function restartGame() {
+    initializeGame();
+}
+
 
 function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, skeletonMageCount = 0, wolfCount = 0, zombieCount = 0, zombieBigCount = 0 }, map, entities) {
-    let instanceCount = Object.keys(entities).length; // Compteur basé sur le nombre d'entités existantes
+    let instanceCount = Object.keys(entities).length; // Compteur global basé sur le nombre total d'entités
 
     const createMonster = (count, type) => {
         for (let i = 1; i <= count; i++) {
-            // Incrémentation de l'ID et du nom de l'instance
-            const id = `${type}${i + Object.keys(entities).filter(key => key.startsWith(type)).length}`;
-            const instanceName = `enemy${++instanceCount}`;
+            // Génère un ID basé sur le type (pour identification)
+            const id = `${type}${i + Object.keys(entities).filter(key => key.startsWith('enemy')).length}`;
+            const instanceName = `enemy${++instanceCount}`; // Génère une clé unique pour l'entité
 
-            // Création du monstre
+            // Crée un nouvel ennemi
             const monster = new Enemy({
-                id,
+                id, // ID du monstre (ex: skeleton1)
                 name: '',
                 y: 'random',
                 x: 'random',
@@ -140,11 +166,12 @@ function generateMonsters({ bossCount = 0, mummyCount = 0, skeletonCount = 0, sk
                 entities,
             });
 
-            // Stockage dans entities
+            // Stocke uniquement sous `enemyX`
             entities[instanceName] = { instance: monster, id };
         }
     };
 
+    // Générer les monstres pour chaque type
     createMonster(bossCount, 'boss');
     createMonster(mummyCount, 'mummy');
     createMonster(skeletonCount, 'skeleton');
@@ -185,18 +212,11 @@ async function initializeGame() {
         entities
     );
 
-    player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, level: 1, map, entities });
+    if (player1 === undefined) {
+        player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, level: 1, map, entities });
+    }
 
     requestAnimationFrame(gameLoop);
-}
-
-export function gameOver() {
-    addToConsole('GAME OVER - new game in 10...', 'white')
-    setTimeout(() => {restartGame()}, 10000);
-}
-
-function restartGame() {
-    initializeGame();
 }
 
 function drawBar(character, type, color, x, y, width, height) {
@@ -275,6 +295,32 @@ function drawText(text, size, color, x, y) {
     ctx.fillText(text, x, y);
 }
 
+function removeEntity(entityId) {
+    console.log(`Début de la suppression pour l'id : ${entityId}`);
+
+    let removed = false;
+    // Continue tant qu'une clé correspondant à `entityId` est trouvée
+    while (true) {
+        const keyToRemove = Object.keys(entities).find(key => entities[key].id === entityId);
+
+        if (keyToRemove) {
+            delete entities[keyToRemove];
+            removed = true;
+            console.log(`L'entité ${keyToRemove} (id: ${entityId}) a été retirée.`);
+        } else {
+            // Arrête la boucle si aucune clé n'est trouvée
+            break;
+        }
+    }
+
+    if (!removed) {
+        console.log(`Aucune entité avec l'id ${entityId} n'a été trouvée.`);
+    }
+
+    // Log de l'état final des entités
+    console.log('État final des entités :', entities);
+}
+
 function fightMenu(player, enemy, musicChoice) {
     gameState = 'fightMenu';
     let selectedIndex = 0; // Index de l'option actuellement sélectionnée
@@ -306,11 +352,13 @@ function fightMenu(player, enemy, musicChoice) {
                 if (enemy.isDead()) {
                     addToConsole(`${enemy.id} est mort`, 'red');
                     enemy.drop(player)
+                    player.levelUp()
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play();
                     musicMap.currentTime = 0;
                     musicMap.volume = 0.15;
+                    removeEntity(enemy.id);
                     map.entityLayer[player.y][player.x] = '';
                     map.entityLayer[enemy.y][enemy.x] = player.id;
                     player.x = enemy.x;
@@ -427,8 +475,9 @@ window.addEventListener('keydown', (event) => {
         else if (event.key === 'ArrowRight') direction = 'right';
 
         keyPressed = true;
+        }
         musicMap.play();
-    }
+
 });
 
 window.addEventListener('keyup', () => {
@@ -436,8 +485,6 @@ window.addEventListener('keyup', () => {
     keyPressed = false;
 });
 
-
-// joueur peut level up
 // system de pause via gamestate
 // prévoir 2 musiques correspondantes au biome et 2 nouvelles musiques de combat
 // ajouter le portail de fin de niveau quand le boss est mort

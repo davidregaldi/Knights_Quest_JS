@@ -3,7 +3,7 @@ import { gameOver } from '../main.js';
 import { fightScreen } from '../main.js';
 
 class Player {
-    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, strengh = 20, xpMax = 250, xp = 0, hpMax = 100, hp = 100, potion = 2, gold = 20, map, entities}) {
+    constructor({id = 'player1', name = 'Eidknab', y = 0, x = 0, consColor='royalblue', level = 1, strengh = 20, dexterity = 20, xpMax = 250, xp = 0, hpMax = 100, hp = 100, potion = 2, gold = 20, map, entities}) {
         this.id = id
         this.name = name
         this.y = y
@@ -11,6 +11,7 @@ class Player {
         this.consColor = consColor
         this.level = level
         this.strengh = strengh
+        this.dexterity = dexterity
         this.xpMax = 250 * level
         this.xp = xp
         this.hpMax = hpMax
@@ -46,6 +47,20 @@ class Player {
         addToConsole(`Potions restantes: ${this.potion}`)
     }
 
+    levelUp() {
+        if (this.xp >= this.xpMax) {
+            this.level += 1
+            this.hpMax *= 1.2
+            this.hpMax = Math.floor(this.hpMax)
+            this.hp = this.hpMax
+            this.xpMax *= 2
+            this.xp = 0
+            this.strengh += 1
+            this.dexterity += 1
+            addToConsole(`DING! Level: ${this.level} Life:${this.hpMax} Strengh:${this.strengh} Dexterity:${this.strengh}`)
+        }
+    }
+
     isDead() {
         if (this.hp > 0) {
             return false;
@@ -55,17 +70,24 @@ class Player {
     }
 
     attack(target, gameSounds) {
-        const randomFactor = Math.random() * 0.4 + 0.8;
-        const damage = Math.round(this.strengh * randomFactor); // Calculer le dégât en arrondissant à l'entier le plus proche
-        target.hp -= damage; // Appliquer les dégâts à la cible
+        const randomFactor = Math.random() * 0.4 + 0.8; // Facteur de dégâts aléatoire entre 0.8 et 1.2
+        let damage = Math.round(this.strengh * randomFactor); // Calcul initial des dégâts
+        const critChance = this.dexterity * 0.005; // 0.5% de chance par point de dextérité
+    
+        // Vérifie si un coup critique se déclenche
+        if (Math.random() < critChance) {
+            damage = Math.round(damage * 1.5); // Augmente les dégâts de 50%
+            addToConsole(`${this.name} inflige ${damage} dégâts à ${target.id} (critique)`, 'steelBlue');
+        } else {
+            addToConsole(`${this.name} inflige ${damage} dégâts à ${target.id}`, this.consColor);
+        }
+    
+        target.hp -= damage; // Applique les dégâts à la cible
     
         // Choisir et jouer un son de frappe
         const hitSound = Math.random() < 0.5 ? gameSounds['hit1'] : gameSounds['hit2'];
         hitSound.volume = 0.2;
         hitSound.play();
-    
-        // Afficher le message de dégâts
-        addToConsole(`${this.name} inflige ${damage} points de dégâts à ${target.id}`, this.consColor);
     }
 
     move(newY, newX, map, entities, gameSounds) {
