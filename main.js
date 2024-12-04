@@ -29,8 +29,8 @@ let musicChoice
 // Musique de Carte
 let musicMap
 
-// Etat de la gameloop: map, fightMenu, pause
-let gameState = 'map'
+// Etat de la gameloop: firstLaunch, map, fightMenu, gameOver
+let gameState = 'firstLaunch'
 
 export function addToConsole(message, color = 'green', bold = true) {
     const consoleDiv = document.querySelector('.console');
@@ -95,22 +95,24 @@ async function loadAllImages() {
 async function loadAllSounds() {
     try {
         const soundFiles = [
-            'assets/sounds/bridge.wav',
-            'assets/sounds/chest.wav',
-            'assets/sounds/dead.wav',
-            'assets/sounds/hit1.wav',
-            'assets/sounds/hit2.wav',
-            'assets/sounds/move.wav',
-            'assets/sounds/musicHerb.wav',
-            'assets/sounds/musicMagma.wav',
-            'assets/sounds/musicFight1.wav',
-            'assets/sounds/musicFight2.wav',
-            'assets/sounds/jump.wav',
-            'assets/sounds/select.wav',
-            'assets/sounds/trap.wav',
-            'assets/sounds/quit.wav',
-            'assets/sounds/wall.wav',
-            'assets/sounds/water.wav',
+            'assets/sounds/bridge.mp3',
+            'assets/sounds/chest.mp3',
+            'assets/sounds/dead.mp3',
+            'assets/sounds/hit1.mp3',
+            'assets/sounds/hit2.mp3',
+            'assets/sounds/levelUp.mp3',
+            'assets/sounds/move.mp3',
+            'assets/sounds/musicHerb.mp3',
+            'assets/sounds/musicMagma.mp3',
+            'assets/sounds/musicFight1.mp3',
+            'assets/sounds/musicFight2.mp3',
+            'assets/sounds/musicGameOver.mp3',
+            'assets/sounds/jump.mp3',
+            'assets/sounds/select.mp3',
+            'assets/sounds/trap.mp3',
+            'assets/sounds/quit.mp3',
+            'assets/sounds/wall.mp3',
+            'assets/sounds/water.mp3',
 
         ];
 
@@ -135,13 +137,34 @@ async function loadAllSounds() {
 }
 
 export function gameOver() {
-    addToConsole('GAME OVER - new game in 10...', 'white')
+    gameState = 'gameOver'
+    drawGameOverEffect()
+    musicMap.volume = 0
+    gameSounds['musicGameOver'].volume = 0.03;
+    gameSounds['musicGameOver'].loop = false;
+    gameSounds['musicGameOver'].currentTime = 0;
+    gameSounds['musicGameOver'].play();
+    addToConsole('GAME OVER - new game in 8...', 'white')
     entities = {}
     player1 = undefined
-    setTimeout(() => {restartGame()}, 10000);
+    setTimeout(() => {restartGame()}, 8000);
+}
+
+function drawGameOverEffect() {
+    // Dessine le rectangle rouge semi-transparent
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Rouge avec une opacité de 50 %
+    ctx.fillRect(0, 0, canvas.width, canvas.height); // Rectangle couvrant tout le canvas
+
+    // Ajoute le texte "GAME OVER"
+    ctx.font = 'bold 60px Arial'; // Taille et style de la police
+    ctx.fillStyle = 'white'; // Couleur du texte
+    ctx.textAlign = 'center'; // Aligne horizontalement au centre
+    ctx.textBaseline = 'middle'; // Aligne verticalement au centre
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2); // Dessine le texte au centre
 }
 
 function restartGame() {
+    gameState = 'map'
     initializeGame();
 }
 
@@ -190,7 +213,6 @@ async function initializeGame() {
     if (musicMap !== undefined) {musicMap.volume = 0};
 
     window.gameImages = gameImages;
-    gameState = 'map'
 
     map = new Map({ width: 16, height: 16, biome: 'random', name: 'The Forest' });
 
@@ -213,9 +235,12 @@ async function initializeGame() {
     );
 
     if (player1 === undefined) {
-        player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, level: 1, map, entities });
+        player1 = new Player({ id: 'player1', name: 'Eidknab', y: 0, x: 0, level: 1, map, entities});
     }
-
+    if (gameState === ('firstLaunch')) {
+        addToConsole(`Welcome, click on screen and move with ↤ ↥ ↧ ↦`, 'royalblue')
+        gameState = 'map'
+    } else {addToConsole(`Welcome back ${player1.name}!`, 'royalblue')}
     requestAnimationFrame(gameLoop);
 }
 
@@ -323,6 +348,7 @@ function removeEntity(entityId) {
 
 function fightMenu(player, enemy, musicChoice) {
     gameState = 'fightMenu';
+    if (player.isDead()) {drawGameOverEffect()}
     let selectedIndex = 0; // Index de l'option actuellement sélectionnée
     const menuOptions = 3; // Le nombre total d'options du menu
 
@@ -352,7 +378,7 @@ function fightMenu(player, enemy, musicChoice) {
                 if (enemy.isDead()) {
                     addToConsole(`${enemy.id} est mort`, 'red');
                     enemy.drop(player)
-                    player.levelUp()
+                    player.levelUp(gameSounds)
                     musicChoice.volume = 0;
                     gameSounds['dead'].volume = 0.6;
                     gameSounds['dead'].play();
@@ -371,6 +397,7 @@ function fightMenu(player, enemy, musicChoice) {
                     enemy.attack(player, gameSounds);
                     if (player.isDead()) {
                         addToConsole(`${player.name} est mort`, 'pink');
+                        musicChoice.volume = 0
                         gameOver();
                     }
                     window.removeEventListener('keydown', handleMenuNavigation); // Retirer l'écouteur du menu après l'action

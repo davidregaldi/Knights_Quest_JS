@@ -47,7 +47,7 @@ class Player {
         addToConsole(`Potions restantes: ${this.potion}`)
     }
 
-    levelUp() {
+    levelUp(gameSounds) {
         if (this.xp >= this.xpMax) {
             this.level += 1
             this.hpMax *= 1.2
@@ -57,7 +57,11 @@ class Player {
             this.xp = 0
             this.strengh += 1
             this.dexterity += 1
-            addToConsole(`DING! Level: ${this.level} Life:${this.hpMax} Strengh:${this.strengh} Dexterity:${this.strengh}`)
+            addToConsole(`DING! Level:${this.level} Life:${this.hpMax} Strengh:${this.strengh} Dexterity:${this.strengh}`, 'blueViolet')
+            gameSounds['levelUp'].volume = 0.03;
+            gameSounds['levelUp'].loop = false;
+            gameSounds['levelUp'].currentTime = 0;
+            gameSounds['levelUp'].play();
         }
     }
 
